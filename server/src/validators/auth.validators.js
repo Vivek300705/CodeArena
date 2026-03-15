@@ -1,13 +1,17 @@
-import { AppError } from "../utils/AppError.js";
+import { z } from "zod";
 
-export const validate = (schema) => {
-  return (req, res, next) => {
-    try {
-      schema.parse(req.body);
-      next();
-    } catch (error) {
-      const message = error.errors?.[0]?.message || "Validation error";
-      next(new AppError(message, 400));
-    }
-  };
-};
+export const registerSchema = z.object({
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(["user", "admin"]).optional(),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string(),
+});

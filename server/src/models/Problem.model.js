@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
-
+import slugify from "slugify";
 const problemSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
-      unique: true,
     },
 
     description: {
@@ -44,6 +43,10 @@ const problemSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    slug: {
+      type: String,
+      unique: true,
+    },
   },
   { timestamps: true },
 );
@@ -51,5 +54,19 @@ const problemSchema = new mongoose.Schema(
 problemSchema.index({ difficulty: 1 });
 problemSchema.index({ tags: 1 });
 problemSchema.index({createdAt:-1});
+problemSchema.index(
+  { title: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } },
+);
+problemSchema.pre("save", function (next) {
+  if (this.isModified("title")) {
+    this.slug = slugify(this.title, {
+      lower: true,
+      strict: true,
+    });
+  }
+
+  next();
+});
 
 export default mongoose.model("Problem", problemSchema);

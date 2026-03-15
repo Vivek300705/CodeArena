@@ -109,3 +109,15 @@ export const deleteProblem = async (req, res, next) => {
     next(error);
   }
 };
+export const getProblemBySlug = async (req, res, next) => {
+  try {
+    const problem = await Problem.findOne({
+      slug: req.params.slug,
+      isDeleted: false,
+    });
+
+    res.json(problem);
+  } catch (error) {
+    next(error);
+  }
+};

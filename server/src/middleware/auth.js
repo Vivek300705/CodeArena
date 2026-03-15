@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import logger from "../config/logger.js";
 import { AppError } from "../utils/AppError.js";
 
-export const auth =async(req,res,next)=>{
+ const auth =async(req,res,next)=>{
     try{
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -20,3 +20,4 @@ export const auth =async(req,res,next)=>{
    return next(new AppError("Unauthorized: Invalid token", 401));
 }
 }
+export default auth;
