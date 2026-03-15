@@ -6,6 +6,7 @@ import logger from "./config/logger.js";
 import requestLogger from "./middleware/requestLogger.js";
 import connectDB from "./config/db_config.js";
 import authRoutes from "./routes/auth.routes.js";
+import problemRoutes from "./routes/problem.routes.js";
 dotenv.config();
 
 const app=express();
@@ -17,6 +18,7 @@ app.get("/",(req,res)=>{
     res.json({message:"server is running"})
 });
 app.use("/auth", authRoutes);
+app.use("/api",problemRoutes);
 // error middleware
 app.use(errorHandler);
 connectDB();
