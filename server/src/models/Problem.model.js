@@ -5,7 +5,6 @@ const problemSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true,
       unique: true,
     },
 
@@ -34,8 +33,23 @@ const problemSchema = new mongoose.Schema(
       type: Number,
       default: 256,
     },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
+
+problemSchema.index({ difficulty: 1 });
+problemSchema.index({ tags: 1 });
+problemSchema.index({createdAt:-1});
 
 export default mongoose.model("Problem", problemSchema);

@@ -1,8 +1,10 @@
 import Problem from "../models/Problem.model.js";
-
 export const createProblem = async (req, res, next) => {
   try {
-    const problem = await Problem.create(req.body);
+    const problem = await Problem.create({
+      ...req.body,
+      createdBy: req.user.userId,
+    });
 
     res.status(201).json(problem);
   } catch (error) {
@@ -12,17 +14,43 @@ export const createProblem = async (req, res, next) => {
 
 export const getProblems = async (req, res, next) => {
   try {
-    const problems = await Problem.find();
+    const { difficulty, tags, page = 1, limit = 10 } = req.query;
 
-    res.json(problems);
+    const filter = { isDeleted: false };
+
+    if (difficulty) {
+      filter.difficulty = difficulty;
+    }
+
+    if (tags) {
+      filter.tags = { $in: tags.split(",") };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const problems = await Problem.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Problem.countDocuments(filter);
+
+    res.json({
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      problems,
+    });
   } catch (error) {
     next(error);
   }
 };
-
 export const getProblemById = async (req, res, next) => {
   try {
-    const problem = await Problem.findById(req.params.id);
+    const problem = await Problem.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
@@ -35,13 +63,21 @@ export const getProblemById = async (req, res, next) => {
 };
 export const updateProblem = async (req, res, next) => {
   try {
-    const problem = await Problem.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const problem = await Problem.findById(req.params.id);
 
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }
+
+    if (problem.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({
+        message: "You cannot update this problem",
+      });
+    }
+
+    Object.assign(problem, req.body);
+
+    await problem.save();
 
     res.json(problem);
   } catch (error) {
@@ -50,13 +86,25 @@ export const updateProblem = async (req, res, next) => {
 };
 export const deleteProblem = async (req, res, next) => {
   try {
-    const problem = await Problem.findByIdAndDelete(req.params.id);
+    const problem = await Problem.findById(req.params.id);
 
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }
 
-    res.json({ message: "Problem deleted successfully" });
+    if (problem.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({
+        message: "You cannot delete this problem",
+      });
+    }
+
+    problem.isDeleted = true;
+
+    await problem.save();
+
+    res.json({
+      message: "Problem deleted successfully",
+    });
   } catch (error) {
     next(error);
   }
