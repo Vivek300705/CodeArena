@@ -7,18 +7,15 @@ const submissionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
     problemId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Problem",
       required: true,
     },
-
     code: {
       type: String,
       required: true,
     },
-
     language: {
       type: String,
       enum: [
@@ -26,7 +23,7 @@ const submissionSchema = new mongoose.Schema(
         "c",
         "java",
         "python",
-        "javascript",
+        "node", // Changed 'javascript' to 'node' to match your worker config
         "typescript",
         "go",
         "rust",
@@ -36,28 +33,48 @@ const submissionSchema = new mongoose.Schema(
       ],
       required: true,
     },
-
     status: {
       type: String,
       enum: [
         "queued",
-        "running",
-        "accepted",
-        "wrong_answer",
-        "runtime_error",
-        "time_limit_exceeded",
-        "compilation_error",
+        "processing", // Added to show the worker is currently running it
+        "completed", // General finish state
+        "failed", // General error state
       ],
       default: "queued",
     },
-
+    // The specific verdict from the judge
+    verdict: {
+      type: String,
+      enum: [
+        "Accepted",
+        "Wrong Answer",
+        "Time Limit Exceeded",
+        "Memory Limit Exceeded",
+        "Runtime Error",
+        "Compilation Error",
+        null,
+      ],
+      default: null,
+    },
+    // Time taken in ms
     runtime: {
       type: Number,
       default: null,
     },
-
+    // Memory used in KB/MB
     memory: {
       type: Number,
+      default: null,
+    },
+    // Actual output from the user's code
+    output: {
+      type: String,
+      default: null,
+    },
+    // Error stack trace or compiler message
+    error: {
+      type: String,
       default: null,
     },
   },
