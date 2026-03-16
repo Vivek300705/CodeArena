@@ -32,3 +32,30 @@ export const getSubmissions = async () => {
   const res = await api.get('/api/v1/submissions');
   return res.data.data;
 };
+
+/**
+ * ADMIN: Create a new problem
+ * POST /api/problems
+ */
+export const createProblem = async (problemData) => {
+  const res = await api.post('/api/problems', problemData);
+  return res.data;
+};
+
+/**
+ * ADMIN: Update an existing problem
+ * PUT /api/problems/:id
+ */
+export const updateProblem = async (id, problemData) => {
+  const res = await api.put(`/api/problems/${id}`, problemData);
+  return res.data;
+};
+
+/**
+ * ADMIN: Delete a problem
+ * DELETE /api/problems/:id
+ */
+export const deleteProblem = async (id) => {
+  const res = await api.delete(`/api/problems/${id}`);
+  return res.data;
+};

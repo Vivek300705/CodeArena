@@ -20,6 +20,9 @@ export default function Navbar() {
         {isAuthenticated && (
           <Link to="/history" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/history') ? 'text-white' : 'text-zinc-500 hover:text-white'}`}>History</Link>
         )}
+        {isAuthenticated && user?.role === 'admin' && (
+          <Link to="/admin" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/admin') ? 'text-cyan-400' : 'text-zinc-500 hover:text-cyan-400'}`}>Admin</Link>
+        )}
       </nav>
 
       <div className="flex items-center gap-4">

@@ -8,6 +8,8 @@ import ProblemList from '../pages/ProblemList.jsx';
 import ProblemDetail from '../pages/ProblemDetail.jsx';
 import SubmissionHistory from '../pages/SubmissionHistory.jsx';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
+import ProtectedAdminRoute from '../components/ProtectedAdminRoute.jsx';
+import AdminDashboard from '../pages/AdminDashboard.jsx';
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +46,16 @@ export const router = createBrowserRouter([
           {
             path: 'history',
             element: <SubmissionHistory />,
+          }
+        ]
+      },
+      {
+        path: 'admin',
+        element: <ProtectedAdminRoute />,
+        children: [
+          {
+            index: true,
+            element: <AdminDashboard />,
           }
         ]
       }
