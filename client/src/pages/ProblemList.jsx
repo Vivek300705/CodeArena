@@ -207,8 +207,6 @@ export default function ProblemList() {
   );
 }
 
-
-import { Link } from 'react-router-dom';
 import { Search, Filter, Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 const MOCK_PROBLEMS = [
