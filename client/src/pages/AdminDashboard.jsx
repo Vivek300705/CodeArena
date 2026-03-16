@@ -84,7 +84,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-8 backdrop-blur-xl">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-8">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
           <input
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="bg-zinc-950/50 border border-white/10 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl">
+      <div className="bg-zinc-950/50 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
         {loading ? (
           <div className="flex justify-center items-center p-20">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />

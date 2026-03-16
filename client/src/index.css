@@ -9,3 +9,14 @@
     @apply bg-background text-foreground antialiased selection:bg-primary/30 overflow-x-hidden;
   }
 }
+
+/* ── Portal / Modal stacking fix ──────────────────────────────────── */
+/* Tailwind backdrop-blur creates a new stacking context; we need
+   our React portal (mounted on <body>) to always win the z-battle.  */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  isolation: isolate;
+}
+
