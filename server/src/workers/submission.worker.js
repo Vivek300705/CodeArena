@@ -4,7 +4,6 @@ import fs from "fs";
 import path from "path";
 import { promisify } from "util";
 import { createClient } from "redis";
-import { loadTestCases } from "../utils/testcaseLoader.js";
 import Submission from "../models/submission.model.js";
 import Problem from "../models/Problem.model.js";
 import logger from "../config/logger.js";
@@ -67,10 +66,13 @@ const worker = new Worker(
     try {
       /**
        * TESTCASE LOADING
-       * Switch to loadTestCases(problemId) once your folders are named correctly.
-       * For now, we use a Mock to ensure the Docker flow works.
+       * Fetch test cases directly from the DB problem document.
        */
-      const testCases = loadTestCases(problemId);
+      const testCases = problem.testcases;
+
+      if (!testCases || testCases.length === 0) {
+        throw new Error("No test cases found for this problem in the database.");
+      }
 
       if (!fs.existsSync(workDir)) fs.mkdirSync(workDir, { recursive: true });
 

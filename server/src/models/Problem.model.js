@@ -23,6 +23,24 @@ const problemSchema = new mongoose.Schema(
       default: [],
     },
 
+    testcases: [
+      {
+        input: String,
+        output: String,
+        isHidden: {
+          type: Boolean,
+          default: false
+        }
+      }
+    ],
+
+    boilerplates: [
+      {
+        language: String,
+        code: String
+      }
+    ],
+
     examples: [
       {
         input: String,

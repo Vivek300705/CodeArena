@@ -64,7 +64,16 @@ export default function ProblemDetail() {
   useEffect(() => {
     setProblemLoading(true);
     getProblemById(id)
-      .then(setProblem)
+      .then((data) => {
+        setProblem(data);
+        // On initial load, try to set the code to the boilerplate for the initial language ('javascript')
+        if (data && data.boilerplates && data.boilerplates.length > 0) {
+          const bp = data.boilerplates.find(b => b.language === 'javascript' || b.language === 'node');
+          if (bp) {
+            setCode(bp.code);
+          }
+        }
+      })
       .catch((err) => setProblemError(err.response?.data?.message || 'Failed to load problem'))
       .finally(() => setProblemLoading(false));
   }, [id]);
@@ -81,6 +90,19 @@ export default function ProblemDetail() {
   const handleLanguageChange = (e) => {
     const lang = e.target.value;
     setLanguage(lang);
+    
+    // Switch to problem-specific boilerplate if available
+    if (problem && problem.boilerplates && problem.boilerplates.length > 0) {
+      // Map frontend lang to backend if needed (javascript -> node in backend)
+      const mappedLang = lang === 'javascript' ? 'node' : lang;
+      const bp = problem.boilerplates.find(b => b.language === mappedLang || b.language === lang);
+      if (bp) {
+        setCode(bp.code);
+        return;
+      }
+    }
+    
+    // Fallback locally
     setCode(DEFAULT_CODE[lang]);
   };
 
@@ -205,7 +227,7 @@ export default function ProblemDetail() {
             </select>
           </div>
           <button
-            onClick={() => setCode(DEFAULT_CODE[language])}
+            onClick={() => handleLanguageChange({ target: { value: language } })}
             className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors border border-white/5 text-zinc-300"
           >
             <Terminal className="w-4 h-4" /> Reset

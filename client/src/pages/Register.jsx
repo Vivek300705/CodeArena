@@ -12,7 +12,8 @@ const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  role: z.enum(['contestant', 'admin']).default('contestant')
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -137,6 +138,31 @@ export default function Register() {
                 />
               </div>
               {errors.confirmPassword && <p className="mt-2 text-sm text-red-400">{errors.confirmPassword.message}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Account Type</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="contestant"
+                    {...register('role')}
+                    className="text-cyan-500 bg-background border-border focus:ring-cyan-500 focus:ring-offset-background"
+                  />
+                  <span className="text-zinc-300 text-sm">Contestant</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="admin"
+                    {...register('role')}
+                    className="text-cyan-500 bg-background border-border focus:ring-cyan-500 focus:ring-offset-background"
+                  />
+                  <span className="text-zinc-300 text-sm">Admin</span>
+                </label>
+              </div>
+              {errors.role && <p className="mt-2 text-sm text-red-400">{errors.role.message}</p>}
             </div>
 
             <button
