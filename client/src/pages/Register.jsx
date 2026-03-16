@@ -36,10 +36,12 @@ export default function Register() {
       
       // Auto-login after successful registration, or redirect to login depending on API
       // Often register returns token + user just like login
-      if (response.token) {
-        login(response.user, response.token);
+      if (response.accessToken) {
+        login(response.data, response.accessToken);
+        navigate('/dashboard');
+      } else {
+        navigate('/login');
       }
-      navigate('/dashboard');
     } catch (err) {
       if (!err.response) {
         // Mock success for UI demo

@@ -21,6 +21,7 @@ export default function ProblemList() {
   const [search, setSearch] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [tagFilter, setTagFilter] = useState('All');
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,6 +37,12 @@ export default function ProblemList() {
 
   useEffect(() => { fetchProblems(); }, []);
 
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    problems.forEach(p => (p.tags || []).forEach(t => tags.add(t)));
+    return Array.from(tags).sort();
+  }, [problems]);
+
   const filteredProblems = useMemo(() => {
     return problems.filter(p => {
       const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
@@ -43,9 +50,10 @@ export default function ProblemList() {
       const matchStatus = statusFilter === 'All' ||
         (statusFilter === 'Solved' && p.status === 'solved') ||
         (statusFilter === 'Unsolved' && p.status !== 'solved');
-      return matchSearch && matchDiff && matchStatus;
+      const matchTag = tagFilter === 'All' || (p.tags && p.tags.includes(tagFilter));
+      return matchSearch && matchDiff && matchStatus && matchTag;
     });
-  }, [search, difficultyFilter, statusFilter, problems]);
+  }, [search, difficultyFilter, statusFilter, tagFilter, problems]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProblems.length / ITEMS_PER_PAGE));
   const paginated = filteredProblems.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -91,13 +99,20 @@ export default function ProblemList() {
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
               className="bg-background border border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary/50 transition-colors text-zinc-300"
             >
-              <option value="All">Status</option>
+              <option value="All">Status: All</option>
               <option value="Solved">Solved</option>
               <option value="Unsolved">Unsolved</option>
             </select>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-background border border-white/5 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors">
-              <Filter className="w-4 h-4" /> Tags
-            </button>
+            <select
+              value={tagFilter}
+              onChange={(e) => { setTagFilter(e.target.value); setPage(1); }}
+              className="bg-background border border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary/50 transition-colors text-zinc-300 max-w-[150px]"
+            >
+              <option value="All">All Tags</option>
+              {allTags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
             <button
               onClick={fetchProblems}
               className="flex justify-center items-center w-10.5 h-10.5 bg-background p-2.5 border border-white/5 rounded-lg hover:bg-white/5 transition-colors text-zinc-400"

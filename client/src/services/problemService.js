@@ -5,7 +5,7 @@ import { api } from './api.js';
  */
 export const getProblems = async () => {
   const res = await api.get('/api/problems');
-  return res.data.data; // Array of problems
+  return res.data.problems; // Array of problems is under 'problems' key
 };
 
 /**
@@ -13,7 +13,7 @@ export const getProblems = async () => {
  */
 export const getProblemById = async (id) => {
   const res = await api.get(`/api/problems/${id}`);
-  return res.data.data;
+  return res.data; // The problem object is sent directly
 };
 
 /**

@@ -23,6 +23,14 @@ const problemSchema = new mongoose.Schema(
       default: [],
     },
 
+    examples: [
+      {
+        input: String,
+        output: String,
+        explanation: String
+      }
+    ],
+
     timeLimit: {
       type: Number,
       default: 1000,

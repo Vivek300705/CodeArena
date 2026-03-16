@@ -26,7 +26,7 @@ export default function Login() {
     try {
       setError('');
       const response = await authService.login(data);
-      login(response.user, response.token);
+      login(response.user, response.accessToken);
       navigate('/dashboard');
     } catch (err) {
       // For local development UI testing if backend is not connected
