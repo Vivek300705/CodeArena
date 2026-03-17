@@ -7,7 +7,7 @@ services:
   - type: web
     name: codearena-api
     runtime: node
-    plan: starter
+    plan: free
     region: ohio
     rootDir: server
 
@@ -42,7 +42,7 @@ services:
   - type: worker
     name: codearena-worker
     runtime: docker
-    plan: starter
+    plan: free
     region: ohio
     rootDir: server
 
