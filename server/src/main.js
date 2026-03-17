@@ -3,12 +3,15 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import xssClean from "xss-clean";
+import swaggerUi from "swagger-ui-express";
 import { errorHandler } from "./middleware/errorHandler.js";
 import logger from "./config/logger.js";
 import requestLogger from "./middleware/requestLogger.js";
 import connectDB from "./config/db_config.js";
 import redisClient from "./config/redis.js";
 import globalRateLimit from "./middleware/globalRateLimit.js";
+import { swaggerSpec } from "./config/swagger.js";
+import { metricsHandler } from "./controllers/metrics.controller.js";
 import authRoutes from "./routes/auth.routes.js";
 import problemRoutes from "./routes/problem.routes.js";
 import submissionRoutes from "./routes/submission.routes.js";
@@ -36,6 +39,39 @@ app.use(globalRateLimit);         // 200 req / 15 min per IP (Redis-backed)
 app.use(requestLogger);
 
 const port = process.env.PORT || 8000;
+
+// Health check — used by Docker HEALTHCHECK and Nginx (rate-limit-exempt)
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+});
+
+/**
+ * @swagger
+ * /metrics:
+ *   get:
+ *     summary: System metrics (memory, CPU, DB connections, cache hit rate)
+ *     tags: [Observability]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Current system metrics
+ */
+app.get("/metrics", metricsHandler);
+
+// Swagger UI — available in all envs (disable behind auth in production if needed)
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: "CodeArena API Docs",
+    swaggerOptions: { persistAuthorization: true },
+  }),
+);
+// Raw OpenAPI JSON spec (for Postman import, CI validation, etc.)
+app.get("/api-docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.json(swaggerSpec);
+});
 
 app.use("/auth", authRoutes);
 app.use("/api", problemRoutes);

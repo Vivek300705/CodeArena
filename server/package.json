@@ -28,6 +28,8 @@
     "redis": "^5.11.0",
     "slugify": "^1.6.8",
     "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "xss-clean": "^0.1.4",
     "zod": "^4.3.6"
   },

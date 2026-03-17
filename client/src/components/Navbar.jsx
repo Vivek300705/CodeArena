@@ -17,6 +17,7 @@ export default function Navbar() {
       
       <nav className="hidden md:flex items-center gap-8">
         <Link to="/problems" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/problems') ? 'text-white' : 'text-zinc-500 hover:text-white'}`}>Problems</Link>
+        <Link to="/leaderboard" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/leaderboard') ? 'text-white' : 'text-zinc-500 hover:text-white'}`}>Leaderboard</Link>
         {isAuthenticated && (
           <Link to="/history" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/history') ? 'text-white' : 'text-zinc-500 hover:text-white'}`}>History</Link>
         )}
@@ -24,6 +25,7 @@ export default function Navbar() {
           <Link to="/admin" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/admin') ? 'text-cyan-400' : 'text-zinc-500 hover:text-cyan-400'}`}>Admin</Link>
         )}
       </nav>
+
 
       <div className="flex items-center gap-4">
         {isAuthenticated ? (

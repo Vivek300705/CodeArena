@@ -1,0 +1,68 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Render.com deployment configuration (render.yaml)
+# Docs: https://render.com/docs/yaml-spec
+#
+# Deploy:
+#  1. Push repo to GitHub
+#  2. Go to render.com → New → Blueprint → Select this repo
+#  3. Render reads this file and provisions all services automatically
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── API Web Service ──────────────────────────────────────────────────────────
+  - type: web
+    name: codearena-api
+    runtime: node
+    plan: starter
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/main.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false        # Set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: codearena-redis
+          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+
+  # ── Submission Worker (background worker) ────────────────────────────────────
+  - type: worker
+    name: codearena-worker
+    runtime: node
+    plan: starter
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/workers/submission.worker.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: codearena-api
+          envVarKey: JWT_SECRET
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: codearena-redis
+          property: connectionString
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  - type: redis
+    name: codearena-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru

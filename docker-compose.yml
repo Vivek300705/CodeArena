@@ -1,0 +1,106 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#  CodeArena — Docker Compose
+#  Services: api (×N), worker, mongo, redis, nginx
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: codearena-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: codearena
+      MONGO_INITDB_ROOT_PASSWORD: codearena123
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: codearena-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── API Server (horizontally scalable) ─────────────────────────────────────
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    # Scale via: docker compose up --scale api=3
+    env_file: ./server/.env.docker
+    environment:
+      NODE_ENV: production
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # No ports exposed directly — traffic goes through Nginx
+
+  # ── Submission Worker ──────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    command: node src/workers/submission.worker.js
+    env_file: ./server/.env.docker
+    environment:
+      NODE_ENV: production
+    volumes:
+      # Worker needs Docker socket to spawn runner containers
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Nginx Reverse Proxy ────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: codearena-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    networks:
+      - frontend
+    depends_on:
+      - api
+
+volumes:
+  mongo_data:
+  redis_data:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

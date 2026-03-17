@@ -1,0 +1,38 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#  Stage 1: deps — install only production dependencies
+# ──────────────────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Copy manifests first for layer-cache efficiency
+COPY package.json package-lock.json ./
+
+RUN npm ci --omit=dev
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Stage 2: runner — lean production image
+# ──────────────────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+
+# Security: run as non-root user
+RUN addgroup -S codearena && adduser -S codearena -G codearena
+
+WORKDIR /app
+
+# Copy only what we need
+COPY --from=deps /app/node_modules ./node_modules
+COPY src ./src
+COPY package.json ./
+
+# Switch to non-root
+USER codearena
+
+# App listens on this port (overridable via env)
+EXPOSE 8000
+
+# Health-check so Docker / Compose knows the container is ready
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost:8000/health || exit 1
+
+CMD ["node", "src/main.js"]

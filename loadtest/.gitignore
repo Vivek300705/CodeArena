@@ -1,0 +1,2 @@
+# Don't commit k6 result dumps
+results.json
