@@ -2,7 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
-import xssClean from "xss-clean";
 import swaggerUi from "swagger-ui-express";
 import { errorHandler } from "./middleware/errorHandler.js";
 import logger from "./config/logger.js";
@@ -30,9 +29,30 @@ initSocket(server);
 
 // ── Security middleware (applied before everything else) ──────────────────
 app.use(helmet());                // Sets 12+ security HTTP headers
-app.use(cors());
+
+// CORS — whitelist Vite dev server + production origin
+const allowedOrigins = [
+  'http://localhost:5173',  // Vite dev server
+  'http://localhost:4173',  // Vite preview
+  'http://localhost:80',    // Docker/Nginx
+  'http://localhost',
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []),
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow non-browser tools (curl, Postman) where origin is undefined
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
-app.use(xssClean());              // Strip <script> tags from req.body / params
 app.use(globalRateLimit);         // 200 req / 15 min per IP (Redis-backed)
 // ─────────────────────────────────────────────────────────────────────────
 

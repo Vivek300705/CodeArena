@@ -5,13 +5,13 @@ FILE=$2
 INPUT=$3
 
 if [ "$LANGUAGE" = "cpp" ]; then
-    g++ $FILE -O2 -o main
-    timeout 2s ./main < $INPUT
+    g++ $FILE -O2 -o /tmp/main
+    timeout 2s /tmp/main < $INPUT
 fi
 
 if [ "$LANGUAGE" = "c" ]; then
-    gcc $FILE -O2 -o main
-    timeout 2s ./main < $INPUT
+    gcc $FILE -O2 -o /tmp/main
+    timeout 2s /tmp/main < $INPUT
 fi
 
 if [ "$LANGUAGE" = "python" ]; then
@@ -23,17 +23,19 @@ if [ "$LANGUAGE" = "node" ]; then
 fi
 
 if [ "$LANGUAGE" = "java" ]; then
-    javac $FILE
+    cp $FILE /tmp/
+    cd /tmp
+    javac $(basename $FILE)
     CLASS=$(basename $FILE .java)
     timeout 2s java $CLASS < $INPUT
 fi
 
 if [ "$LANGUAGE" = "go" ]; then
-    go build -o main $FILE
-    timeout 2s ./main < $INPUT
+    go build -o /tmp/main $FILE
+    timeout 2s /tmp/main < $INPUT
 fi
 
 if [ "$LANGUAGE" = "rust" ]; then
-    rustc $FILE
-    timeout 2s ./$(basename $FILE .rs) < $INPUT
+    rustc -o /tmp/main $FILE
+    timeout 2s /tmp/main < $INPUT
 fi

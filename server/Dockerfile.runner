@@ -1,0 +1,20 @@
+FROM node:20-bullseye-slim
+
+# Install compilers and tools
+RUN apt-get update && apt-get install -y \
+    g++ \
+    gcc \
+    python3 \
+    default-jdk \
+    golang \
+    rustc \
+    dos2unix \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy runner script and normalize line endings
+COPY runner.sh /app/runner.sh
+RUN dos2unix /app/runner.sh && chmod +x /app/runner.sh
+
+CMD ["bash"]

@@ -40,69 +40,16 @@ export const router = createBrowserRouter([
         children: [
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'history', element: <SubmissionHistory /> },
-        ]
+        ],
       },
       {
         path: 'admin',
         element: <ProtectedAdminRoute />,
         children: [
           { index: true, element: <AdminDashboard /> },
-        ]
+        ],
       },
       { path: '*', element: <NotFound /> },
-    ]
-  }
-]);
-
-
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <MainLayout />,
-    children: [
-      {
-        index: true,
-        element: <Landing />,
-      },
-      {
-        path: 'login',
-        element: <Login />,
-      },
-      {
-        path: 'register',
-        element: <Register />,
-      },
-      {
-        path: 'problems',
-        element: <ProblemList />,
-      },
-      {
-        path: 'problems/:id',
-        element: <ProblemDetail />,
-      },
-      {
-        element: <ProtectedRoute />,
-        children: [
-          {
-            path: 'dashboard',
-            element: <Dashboard />,
-          },
-          {
-            path: 'history',
-            element: <SubmissionHistory />,
-          }
-        ]
-      },
-      {
-        path: 'admin',
-        element: <ProtectedAdminRoute />,
-        children: [
-          {
-            index: true,
-            element: <AdminDashboard />,
-          }
-        ]
-      }
-    ]
-  }
+    ],
+  },
 ]);

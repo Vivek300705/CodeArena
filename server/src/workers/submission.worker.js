@@ -1,3 +1,4 @@
+console.log("--> WORKER: Module start");
 import { Worker } from "bullmq";
 import { exec } from "child_process";
 import fs from "fs";
@@ -7,45 +8,38 @@ import { createClient } from "redis";
 import Submission from "../models/submission.model.js";
 import Problem from "../models/Problem.model.js";
 import logger from "../config/logger.js";
+console.log("--> WORKER: Standard Modules Loaded");
 import dotenv from "dotenv";
 import connectDB from "../config/db_config.js";
 import redisClient from "../config/redis.js";
 import { addScore } from "../services/leaderboard.service.js";
+console.log("--> WORKER: All Modules Loaded");
 
 dotenv.config();
+console.log("--> WORKER: calling connectDB()");
 connectDB();
+console.log("--> WORKER: connectDB() called");
 
-// Connect the shared Redis client (used by cache + leaderboard services)
-await redisClient.connect().catch((err) => {
-  logger.warn(`Shared Redis already connecting: ${err.message}`);
-});
+async function boot() {
+  // Connect the shared Redis client (used by cache + leaderboard services)
+  logger.info("Connecting Shared Redis...");
+  await redisClient.connect().catch((err) => {
+    logger.warn(`Shared Redis already connecting: ${err.message}`);
+  });
+  logger.info("Shared Redis Connected.");
 
-const execPromise = promisify(exec);
+  // Dedicated Redis pub/sub client — pub/sub requires its own connection
+  const redisPub = createClient({
+    url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
+  });
+  redisPub.on("error", (err) => logger.error(`RedisPub Error: ${err.message}`));
 
-/**
- * HELPER: Normalizes Windows absolute paths for Docker volumes.
- * Converts "C:\Users\..." to "/c/users/..."
- */
-const normalizePathForDocker = (absolutePath) => {
-  return absolutePath
-    .replace(/^([A-Za-z]):\\/, (match, drive) => `/${drive.toLowerCase()}/`)
-    .replace(/\\/g, "/");
-};
+  logger.info("Connecting RedisPub...");
+  await redisPub.connect();
+  logger.info("RedisPub Connected. Starting Worker.");
 
-// Handle Process Errors to keep worker alive
-process.on("uncaughtException", (err) => {
-  logger.error(`Uncaught Exception: ${err.message}`);
-});
-
-// Dedicated Redis pub/sub client — pub/sub requires its own connection
-const redisPub = createClient({
-  url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
-});
-redisPub.on("error", (err) => logger.error(`RedisPub Error: ${err.message}`));
-await redisPub.connect();
-
-const worker = new Worker(
-  "submissionQueue",
+  const worker = new Worker(
+    "submissionQueue",
   async (job) => {
     const { submissionId, problemId } = job.data;
 
@@ -104,7 +98,6 @@ const worker = new Worker(
         fs.writeFileSync(codePath, submission.code);
         fs.writeFileSync(path.join(workDir, "input.txt"), input);
 
-        const dockerPath = normalizePathForDocker(workDir);
         const start = Date.now();
 
         // Docker Command - Hardened with security flags:
@@ -115,7 +108,7 @@ const worker = new Worker(
         //  --network none     : no outbound network
         //  -m <limit>m        : memory cap from problem config
         const dockerCmd = `docker run --rm \
--v "${dockerPath}:/app/code" \
+-v "${workDir}:/app/code" \
 --read-only \
 --tmpfs /tmp \
 --cap-drop ALL \
@@ -128,7 +121,7 @@ codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName
         logger.info(`🐳 Executing: ${dockerCmd}`);
 
         try {
-          const { stdout, stderr } = await execPromise(dockerCmd);
+          const { stdout, stderr } = await execPromise(dockerCmd, { timeout: 15000, killSignal: 'SIGKILL' });
 
           if (stderr.trim()) {
             overallVerdict = "Runtime Error";
@@ -209,7 +202,30 @@ codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName
       }
     }
   },
-  { connection: { host: "127.0.0.1", port: 6379 } },
-);
+  { connection: { host: "127.0.0.1", port: 6379 } });
 
-logger.info("📡 Submission Worker is online and waiting for jobs...");
+  logger.info("📡 Submission Worker is online and waiting for jobs...");
+}
+
+const execPromise = promisify(exec);
+
+/**
+ * HELPER: Normalizes Windows absolute paths for Docker volumes.
+ * Converts "C:\Users\..." to "/c/users/..."
+ */
+const normalizePathForDocker = (absolutePath) => {
+  return absolutePath
+    .replace(/^([A-Za-z]):\\/, (match, drive) => `/${drive.toLowerCase()}/`)
+    .replace(/\\/g, "/");
+};
+
+// Handle Process Errors to keep worker alive
+process.on("uncaughtException", (err) => {
+  logger.error(`Uncaught Exception: ${err.message}`);
+});
+
+process.on("unhandledRejection", (err) => {
+  logger.error(`Unhandled Rejection: ${err.message}`);
+});
+
+boot();
