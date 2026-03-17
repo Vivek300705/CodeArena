@@ -19,7 +19,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 async function run() {
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    console.error("❌ Usage: node ai_generator.js \\"Problem Text or description\\"");
+    console.error("❌ Usage: node ai_generator.js \"Problem Text or description\"");
     process.exit(1);
   }
   
@@ -75,7 +75,7 @@ Problem Description to Analyze:
     }
 
     const aiData = JSON.parse(rawOutput);
-    console.log(\`✅ AI parsed successfully: "\${aiData.title}"\`);
+    console.log(`✅ AI parsed successfully: "${aiData.title}"`);
 
     // Compile the JS code strings into actual functions
     // The AI returns just the body, so we wrap it:
@@ -124,10 +124,10 @@ Problem Description to Analyze:
             { _id: exists._id },
             { $set: problemData }
         );
-        console.log(\`✅ Fully Automated AI Problem "\${aiData.title}" Updated in DB!\`);
+        console.log(`✅ Fully Automated AI Problem "${aiData.title}" Updated in DB!`);
     } else {
         await Problem.collection.insertOne(problemData);
-        console.log(\`✅ Fully Automated AI Problem "\${aiData.title}" Created in DB!\`);
+        console.log(`✅ Fully Automated AI Problem "${aiData.title}" Created in DB!`);
     }
 
     // exit

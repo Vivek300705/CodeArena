@@ -19,4 +19,4 @@ WORKDIR /app
 COPY runner.sh /app/runner.sh
 RUN chmod +x /app/runner.sh
 
-CMD ["/bin/bash"]
+CMD ["pm2-runtime", "ecosystem.config.js"]
