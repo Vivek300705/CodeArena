@@ -41,6 +41,15 @@ const problemSchema = new mongoose.Schema(
       }
     ],
 
+    // Hidden driver code that wraps the user's function with input parsing + output printing.
+    // This enables LeetCode-style submissions where the user only writes the function.
+    driverCode: [
+      {
+        language: String,
+        code: String
+      }
+    ],
+
     examples: [
       {
         input: String,

@@ -34,6 +34,14 @@ export const getSubmissions = async () => {
 };
 
 /**
+ * Fetch a single submission by its ID — GET /api/v1/submissions/:id
+ */
+export const getSubmissionById = async (id) => {
+  const res = await api.get(`/api/v1/submissions/${id}`);
+  return res.data.data;
+};
+
+/**
  * ADMIN: Create a new problem
  * POST /api/problems
  */

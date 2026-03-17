@@ -77,6 +77,15 @@ const submissionSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Per-testcase tracking
+    testcasesPassed: {
+      type: Number,
+      default: 0,
+    },
+    totalTestcases: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );

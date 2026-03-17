@@ -23,7 +23,9 @@ class SocketService {
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,       // start at 1s
       reconnectionDelayMax: 10000,   // cap at 10s
-      transports: ['websocket'],
+      // Let Socket.IO use its default transport strategy:
+      // starts with HTTP long-polling (always works), then upgrades to WebSocket.
+      // Forcing 'websocket' only causes repeated failures if the WS handshake drops.
     });
 
     this.socket.on('connect', () => {

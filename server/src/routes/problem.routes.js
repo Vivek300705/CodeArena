@@ -57,6 +57,28 @@ router.get("/problems", getProblems);
 
 /**
  * @swagger
+ * /api/problems/slug/{slug}:
+ *   get:
+ *     summary: Get a problem by slug
+ *     tags: [Problems]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema: { type: string }
+ *         example: two-sum
+ *     responses:
+ *       200:
+ *         description: Problem object
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Problem' }
+ */
+router.get("/problems/slug/:slug", getProblemBySlug);
+
+/**
+ * @swagger
  * /api/problems/{id}:
  *   get:
  *     summary: Get a single problem by ID
@@ -80,28 +102,6 @@ router.get("/problems", getProblems);
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.get("/problems/:id", getProblemById);
-
-/**
- * @swagger
- * /api/problems/slug/{slug}:
- *   get:
- *     summary: Get a problem by slug
- *     tags: [Problems]
- *     security: []
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema: { type: string }
- *         example: two-sum
- *     responses:
- *       200:
- *         description: Problem object
- *         content:
- *           application/json:
- *             schema: { $ref: '#/components/schemas/Problem' }
- */
-router.get("/problems/slug/:slug", getProblemBySlug);
 
 /**
  * @swagger

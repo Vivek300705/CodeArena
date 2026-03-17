@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import {
   Play, Send, Clock, Cpu, ChevronLeft,
   CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2
 } from 'lucide-react';
-import { getProblemById, submitCode } from '../services/problemService.js';
+import { getProblemById, submitCode, getSubmissionById } from '../services/problemService.js';
 import { useSocket } from '../hooks/useSocket.js';
 
 const LANGUAGES = [
@@ -56,6 +56,7 @@ export default function ProblemDetail() {
 
   // Submission
   const [submissionId, setSubmissionId] = useState(null);
+  const submissionIdRef = useRef(null); // ref keeps socket callback always fresh
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verdict, setVerdict] = useState(null); // { status, verdict, runtime, error }
   const [submitError, setSubmitError] = useState(null);
@@ -79,13 +80,38 @@ export default function ProblemDetail() {
   }, [id]);
 
   // Socket: receive live verdict update
+  // Use a stable callback backed by a ref so we never compare against a stale
+  // submissionId captured at render time. Fixes the race where the worker
+  // completes before setSubmissionId() has been called on the client.
   const handleVerdictUpdate = useCallback((data) => {
-    if (data.submissionId !== submissionId) return;
+    if (!submissionIdRef.current) return;
+    if (data.submissionId !== submissionIdRef.current) return;
     setVerdict(data);
     setIsSubmitting(false);
-  }, [submissionId]);
+  }, []);
 
   useSocket(handleVerdictUpdate);
+
+  // Polling fallback: in case the WebSocket event was missed (e.g. brief
+  // disconnect), poll the specific submission every 3s while judging.
+  // This effect depends on BOTH isSubmitting AND submissionId so it re-fires
+  // once the submission ID is set (fixes the race where the effect ran before
+  // the API call returned).
+  useEffect(() => {
+    if (!isSubmitting || !submissionIdRef.current) return;
+    const id = submissionIdRef.current;
+    const interval = setInterval(async () => {
+      try {
+        const sub = await getSubmissionById(id);
+        if (sub && sub.status === 'completed') {
+          setVerdict({ submissionId: sub._id, verdict: sub.verdict, status: sub.status, error: sub.error, runtime: sub.runtime, testcasesPassed: sub.testcasesPassed, totalTestcases: sub.totalTestcases });
+          setIsSubmitting(false);
+          clearInterval(interval);
+        }
+      } catch (e) { /* ignore poll errors — server might be temporarily unreachable */ }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isSubmitting, submissionId]); // submissionId in deps ensures effect re-runs once ID is available
 
   const handleLanguageChange = (e) => {
     const lang = e.target.value;
@@ -117,6 +143,9 @@ export default function ProblemDetail() {
         code,
         language: language === 'javascript' ? 'node' : language,
       });
+      // Update BOTH the ref (used by the stable socket callback) and
+      // the state (used for polling useEffect dependency)
+      submissionIdRef.current = submission._id;
       setSubmissionId(submission._id);
       // Verdict will arrive via WebSocket (handleVerdictUpdate above)
     } catch (err) {
@@ -287,6 +316,22 @@ export default function ProblemDetail() {
                   {VERDICT_STYLE[verdict.verdict]?.icon}
                   {verdict.verdict}
                 </div>
+                {verdict.totalTestcases > 0 && (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
+                      <span>Test Cases</span>
+                      <span className="font-mono">{verdict.testcasesPassed}/{verdict.totalTestcases} passed</span>
+                    </div>
+                    <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          verdict.verdict === 'Accepted' ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${(verdict.testcasesPassed / verdict.totalTestcases) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 {verdict.error && (
                   <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-300 text-xs whitespace-pre-wrap">
                     {verdict.error}

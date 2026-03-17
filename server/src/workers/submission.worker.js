@@ -80,6 +80,8 @@ async function boot() {
       let overallVerdict = "Accepted";
       let overallError = null;
       let maxTime = 0;
+      let testcasesPassed = 0;
+      const totalTestcases = testCases.length;
 
       for (let i = 0; i < testCases.length; i++) {
         const { input, output: expected } = testCases[i];
@@ -95,7 +97,14 @@ async function boot() {
         const codePath = path.join(workDir, fileName);
 
         // Write files to the temporary directory
-        fs.writeFileSync(codePath, submission.code);
+        // Combine user code + hidden driver code (LeetCode-style)
+        const driverEntry = problem.driverCode?.find(
+          (d) => d.language === submission.language
+        );
+        const finalCode = driverEntry
+          ? submission.code + "\n\n" + driverEntry.code
+          : submission.code;
+        fs.writeFileSync(codePath, finalCode);
         fs.writeFileSync(path.join(workDir, "input.txt"), input);
 
         const start = Date.now();
@@ -108,9 +117,9 @@ async function boot() {
         //  --network none     : no outbound network
         //  -m <limit>m        : memory cap from problem config
         const dockerCmd = `docker run --rm \
--v "${workDir}:/app/code" \
+-v "${normalizePathForDocker(workDir)}:/app/code" \
 --read-only \
---tmpfs /tmp \
+--tmpfs /tmp:exec \
 --cap-drop ALL \
 --security-opt no-new-privileges \
 --cpus=0.5 \
@@ -145,12 +154,15 @@ codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName
         }
 
         maxTime = Math.max(maxTime, Date.now() - start);
+        testcasesPassed++;  // test case passed!
       }
 
       submission.status = "completed";
       submission.verdict = overallVerdict;
       submission.error = overallError;
       submission.runtime = maxTime;
+      submission.testcasesPassed = testcasesPassed;
+      submission.totalTestcases = totalTestcases;
     } catch (error) {
       logger.error(`❌ Fatal Worker Error: ${error.message}`);
       submission.status = "failed";
@@ -189,6 +201,10 @@ codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName
           userId: submission.userId.toString(),
           verdict: submission.verdict,
           status: submission.status,
+          error: submission.error,
+          runtime: submission.runtime,
+          testcasesPassed: submission.testcasesPassed,
+          totalTestcases: submission.totalTestcases,
         }),
       );
 
