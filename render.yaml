@@ -1,11 +1,5 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Render.com deployment configuration (render.yaml)
-# Docs: https://render.com/docs/yaml-spec
-#
-# Deploy:
-#  1. Push repo to GitHub
-#  2. Go to render.com → New → Blueprint → Select this repo
-#  3. Render reads this file and provisions all services automatically
+# CodeArena Render Blueprint (render.yaml)
 # ──────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -14,6 +8,7 @@ services:
     name: codearena-api
     runtime: node
     plan: starter
+    region: ohio # Best match for your us-east-1 Redis
     rootDir: server
     buildCommand: npm ci --omit=dev
     startCommand: node src/main.js
@@ -25,44 +20,43 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        sync: false        # Set manually in Render dashboard
+        sync: false # Set manually in Render dashboard
+      - key: REDIS_URL
+        sync: false # Set manually using your Redis Cloud URL
       - key: JWT_SECRET
         generateValue: true
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: codearena-redis
-          property: connectionString
       - key: LOG_LEVEL
         value: info
+    ipAllowList:
+      - cidr: 0.0.0.0/0
+        description: Required for database connectivity
 
-  # ── Submission Worker (background worker) ────────────────────────────────────
+  # ── Submission Worker (Background Worker) ────────────────────────────────────
   - type: worker
     name: codearena-worker
-    runtime: node
+    runtime: docker # Changed to Docker to support compilers
     plan: starter
+    region: ohio
     rootDir: server
-    buildCommand: npm ci --omit=dev
-    startCommand: node src/workers/submission.worker.js
+    dockerfilePath: Dockerfile.worker # Ensure this file exists in your /server folder
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
+      - key: USE_DOCKER
+        value: "false" # Uses the local compilers in the Ubuntu image
       - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
         sync: false
       - key: JWT_SECRET
         fromService:
           type: web
           name: codearena-api
           envVarKey: JWT_SECRET
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: codearena-redis
-          property: connectionString
+    ipAllowList:
+      - cidr: 0.0.0.0/0
+        description: Required for database connectivity
 
-  # ── Redis ────────────────────────────────────────────────────────────────────
-  - type: redis
-    name: codearena-redis
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
+# Note: Removed the 'type: redis' block because you are using Redis Cloud.
+# This saves you the monthly cost of a second Redis instance on Render.
