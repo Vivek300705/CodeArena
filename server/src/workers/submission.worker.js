@@ -3,12 +3,15 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
-import { createClient } from "redis";
+
 import Submission from "../models/submission.model.js";
 import Problem from "../models/Problem.model.js";
+import User from "../models/User.model.js";
 import logger from "../config/logger.js";
 import dotenv from "dotenv";
 import connectDB from "../config/db_config.js";
+import redisClient from "../config/redis.js";
+import { addScore } from "../services/leaderboard.service.js";
 
 dotenv.config();
 connectDB();
@@ -31,6 +34,11 @@ process.on("uncaughtException", (err) => {
 });
 
 // Setup Redis Publisher for WebSockets
+// Shared Redis client (for leaderboard + cache services)
+await redisClient.connect().catch(() => {}); // no-op if already connected
+
+// Dedicated pub/sub publisher (pub/sub requires its own connection)
+import { createClient } from "redis";
 const redisPub = createClient({
   url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
 });
@@ -143,6 +151,23 @@ const worker = new Worker(
       submission.error = error.message;
     } finally {
       await submission.save();
+
+      // ── Leaderboard Scoring ─────────────────────────────────────────────
+      // Award 10 pts for first Accepted submission per user-problem pair.
+      if (submission.verdict === "Accepted") {
+        const dedupKey = `leaderboard:awarded:${submission.userId}:${submission.problemId}`;
+        const alreadyAwarded = await redisClient.exists(dedupKey);
+        if (!alreadyAwarded) {
+          await addScore(submission.userId.toString(), 10);
+          // Mark as awarded (no expiry — permanent dedup)
+          await redisClient.set(dedupKey, "1");
+          logger.info(
+            { userId: submission.userId, problemId: submission.problemId },
+            "🏆 Leaderboard: 10 pts awarded"
+          );
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────
 
       // Notify the Socket.io server via Redis Pub/Sub
       await redisPub.publish(
