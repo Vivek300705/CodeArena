@@ -107,8 +107,23 @@ const worker = new Worker(
         const dockerPath = normalizePathForDocker(workDir);
         const start = Date.now();
 
-        // Docker Command - Note the use of quotes around volume path for Windows spaces
-        const dockerCmd = `docker run --rm -v "${dockerPath}:/app/code" -m ${problem.memoryLimit}m --network none codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName} /app/code/input.txt`;
+        // Docker Command - Hardened with security flags:
+        //  --read-only        : container fs is read-only (writes go to /tmp only)
+        //  --cap-drop ALL     : drop ALL Linux capabilities (no root escalation)
+        //  --security-opt no-new-privileges : block setuid/setgid privilege escalation
+        //  --cpus=0.5         : throttle to 0.5 CPU cores to prevent abuse
+        //  --network none     : no outbound network
+        //  -m <limit>m        : memory cap from problem config
+        const dockerCmd = `docker run --rm \
+-v "${dockerPath}:/app/code" \
+--read-only \
+--tmpfs /tmp \
+--cap-drop ALL \
+--security-opt no-new-privileges \
+--cpus=0.5 \
+-m ${problem.memoryLimit}m \
+--network none \
+codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName} /app/code/input.txt`;
 
         logger.info(`🐳 Executing: ${dockerCmd}`);
 
