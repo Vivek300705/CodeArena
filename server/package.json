@@ -12,6 +12,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@google/genai": "^1.45.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.70.4",
     "cors": "^2.8.6",

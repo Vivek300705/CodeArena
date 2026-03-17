@@ -101,9 +101,19 @@ async function boot() {
         const driverEntry = problem.driverCode?.find(
           (d) => d.language === submission.language
         );
-        const finalCode = driverEntry
+        let finalCode = driverEntry
           ? submission.code + "\n\n" + driverEntry.code
           : submission.code;
+        
+        // For C++: always prepend the standard header if driver code exists
+        // This ensures problems seeded without explicit #include still compile.
+        if (submission.language === "cpp" && driverEntry) {
+          const cppHeader = "#include <bits/stdc++.h>\nusing namespace std;\n\n";
+          if (!finalCode.includes("#include")) {
+            finalCode = cppHeader + finalCode;
+          }
+        }
+        
         fs.writeFileSync(codePath, finalCode);
         fs.writeFileSync(path.join(workDir, "input.txt"), input);
 
