@@ -132,7 +132,11 @@ server.listen(PORT, () => {
 
   try {
     console.log("Connecting to Redis...");
-    await redisClient.connect();
+    if (typeof redisClient.safeConnect === "function") {
+      await redisClient.safeConnect();
+    } else {
+      await redisClient.connect();
+    }
     logger.info("✅ Redis connected");
   } catch (err) {
     logger.error(

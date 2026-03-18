@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
-import { createClient } from "redis";
 import logger from "../config/logger.js";
+import { createRedisClient } from "../config/redis.js";
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -11,11 +11,65 @@ export const initSocket = (server) => {
   });
 
   // 1. Setup Redis Subscriber for Worker updates
-  const redisSub = createClient({ url: process.env.REDIS_URL || "redis://127.0.0.1:6379" });
+  async function connectWithTlsFallback() {
+    let client = createRedisClient({ url: process.env.REDIS_URL });
+    try {
+      const url = process.env.REDIS_URL;
+      const isRediss = String(url || "").startsWith("rediss://");
 
-  redisSub
-    .connect()
-    .then(() => {
+      const connectPromise = client.connect();
+      const tlsMismatchPromise =
+        isRediss
+          ? new Promise((_, reject) => {
+              const onError = (err) => {
+                const msg = (err?.message || String(err || "")).toLowerCase();
+                const looksLikeTlsMismatch =
+                  msg.includes("packet length too long") ||
+                  msg.includes("wrong version number") ||
+                  msg.includes("unknown protocol") ||
+                  msg.includes("tls_get_more_records");
+                if (looksLikeTlsMismatch) {
+                  client.off("error", onError);
+                  reject(err);
+                }
+              };
+              client.on("error", onError);
+              connectPromise.finally(() => client.off("error", onError));
+            })
+          : new Promise(() => {});
+
+      await Promise.race([connectPromise, tlsMismatchPromise]);
+      return client;
+    } catch (err) {
+      const url = process.env.REDIS_URL;
+      const isRediss = String(url || "").startsWith("rediss://");
+      const msg = (err?.message || String(err || "")).toLowerCase();
+      const looksLikeTlsMismatch =
+        msg.includes("packet length too long") ||
+        msg.includes("wrong version number") ||
+        msg.includes("unknown protocol") ||
+        msg.includes("tls_get_more_records");
+
+      if (isRediss && looksLikeTlsMismatch) {
+        logger.warn(
+          { err: err.message },
+          "RedisSub TLS handshake failed; retrying without TLS (check REDIS_URL scheme)"
+        );
+        try {
+          client.disconnect();
+        } catch {
+          // ignore
+        }
+        client = createRedisClient({ url, tls: false });
+        await client.connect();
+        return client;
+      }
+      throw err;
+    }
+  }
+
+  connectWithTlsFallback()
+    .then((redisSub) => {
       logger.info("📡 Redis Subscribed for Socket updates");
       
       return redisSub.subscribe("SUBMISSION_UPDATED", (message) => {
