@@ -72,18 +72,3 @@ services:
           envVarKey: JWT_SECRET
       - key: REDIS_TLS
         value: "false"
-
-  # ── Client Static Site ──────────────────────────────────────
-  - type: static
-    name: codearena-client
-    rootDir: client
-
-    buildCommand: npm ci && npm run build
-    staticPublishPath: dist
-
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: codearena-api
-          envVarKey: RENDER_EXTERNAL_URL
