@@ -4,7 +4,7 @@ import { api } from './api.js';
  * Fetch all problems — GET /api/problems
  */
 export const getProblems = async () => {
-  const res = await api.get('/api/problems');
+  const res = await api.get('/api/problems?limit=1000');
   return res.data.problems; // Array of problems is under 'problems' key
 };
 
