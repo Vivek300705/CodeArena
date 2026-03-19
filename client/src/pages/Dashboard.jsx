@@ -53,7 +53,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
         {stats.map((stat, i) => (
           <motion.div
             key={i}
@@ -100,7 +100,7 @@ export default function Dashboard() {
               </p>
             ) : (
               recent.map((s) => (
-                <div key={s._id} className="flex justify-between items-center p-3 bg-background/50 rounded-xl border border-white/5">
+                <div key={s._id} className="flex flex-wrap gap-2 justify-between items-center p-3 bg-background/50 rounded-xl border border-white/5">
                   <div>
                     <h4 className="font-semibold text-zinc-200 text-sm">{s.problemId?.title || 'Unknown Problem'}</h4>
                     <p className="text-xs text-zinc-500 mt-0.5">

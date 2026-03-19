@@ -157,9 +157,9 @@ export default function ProblemDetail() {
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background">
+    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background overflow-hidden">
       {/* Left Panel: Problem Description */}
-      <div className="w-full md:w-1/2 h-full flex flex-col border-r border-white/5 bg-surface/30">
+      <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-white/5 bg-surface/30">
         <div className="p-4 border-b border-white/5 flex items-center gap-4 bg-background/50">
           <Link to="/problems" className="p-2 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white">
             <ChevronLeft className="w-5 h-5" />
@@ -240,7 +240,7 @@ export default function ProblemDetail() {
       </div>
 
       {/* Right Panel: Editor & Console */}
-      <div className="w-full md:w-1/2 h-full flex flex-col">
+      <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col">
         {/* Editor Toolbar */}
         <div className="h-14 border-b border-white/5 bg-background flex items-center justify-between px-4">
           <div className="flex items-center gap-2">

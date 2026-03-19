@@ -48,7 +48,7 @@ export default function Leaderboard() {
   return (
     <div className="container mx-auto px-6 py-12 max-w-3xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-bold flex items-center gap-3">
             <Trophy className="w-9 h-9 text-yellow-400" />

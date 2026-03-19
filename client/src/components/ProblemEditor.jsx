@@ -132,7 +132,7 @@ export default function ProblemEditor({ problem, onClose }) {
         style={{ maxHeight: '90vh' }}>
 
         {/* Header */}
-        <div className="flex justify-between items-center px-8 py-6 border-b border-white/10 shrink-0">
+        <div className="flex justify-between items-center px-4 sm:px-8 py-4 sm:py-6 border-b border-white/10 shrink-0">
           <div>
             <h2 className="text-2xl font-black text-white">
               {isEditing ? 'Edit Problem' : 'Create New Problem'}
@@ -150,7 +150,7 @@ export default function ProblemEditor({ problem, onClose }) {
         </div>
 
         {/* Scrollable body */}
-        <div className="overflow-y-auto px-8 py-8 space-y-12 flex-1"
+        <div className="overflow-y-auto px-4 sm:px-8 py-6 sm:py-8 space-y-12 flex-1"
           style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}>
 
           {error && (
@@ -357,7 +357,7 @@ export default function ProblemEditor({ problem, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-white/10 bg-black/30 backdrop-blur-xl flex justify-end items-center gap-4 shrink-0">
+        <div className="px-4 sm:px-8 py-4 sm:py-5 border-t border-white/10 bg-black/30 backdrop-blur-xl flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-4 shrink-0">
           <button
             type="button"
             onClick={() => onClose(false)}

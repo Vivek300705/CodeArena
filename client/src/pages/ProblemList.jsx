@@ -66,7 +66,7 @@ export default function ProblemList() {
           <h1 className="text-4xl font-bold mb-2">Problem Set</h1>
           <p className="text-zinc-400">Master your algorithms. Pick your battlefield.</p>
         </div>
-        <div className="flex bg-surface p-1 rounded-lg border border-white/5 backdrop-blur-sm">
+        <div className="flex flex-wrap gap-1 bg-surface p-1 rounded-lg border border-white/5 backdrop-blur-sm">
           {['All', 'Easy', 'Medium', 'Hard'].map(diff => (
             <button
               key={diff}
@@ -94,7 +94,7 @@ export default function ProblemList() {
               placeholder="Search problems..."
             />
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
@@ -196,11 +196,11 @@ export default function ProblemList() {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-white/5 flex items-center justify-between text-zinc-400 text-sm bg-background/50">
+        <div className="p-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-zinc-400 text-sm bg-background/50">
           <div>
             Showing {filteredProblems.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filteredProblems.length)} of {filteredProblems.length}
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap justify-center gap-1">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
               <ChevronLeft className="w-5 h-5" />
             </button>
