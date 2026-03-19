@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, Check, ChevronLeft, ChevronRight, RefreshCw, AlertCircle } from 'lucide-react';
 import { getProblems } from '../services/problemService.js';
 
@@ -18,6 +18,7 @@ const getDifficultyColor = (diff) => {
 const ITEMS_PER_PAGE = 10;
 
 export default function ProblemList() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -156,7 +157,8 @@ export default function ProblemList() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ delay: Math.min(idx * 0.05, 0.3) }}
-                      className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                      onClick={() => navigate(`/problems/${problem._id}`)}
+                      className="border-b border-white/5 hover:bg-white/5 transition-colors group cursor-pointer"
                     >
                       <td className="py-4 px-6">
                         {problem.status === 'solved' && <Check className="w-5 h-5 text-green-500" />}
