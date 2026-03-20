@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
-import { Target, User, LogOut, Menu, X } from 'lucide-react';
+import { Target, User, LogOut, Menu, X, Swords } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Navbar() {
@@ -22,6 +22,11 @@ export default function Navbar() {
         <Link to="/leaderboard" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/leaderboard') ? 'text-white' : 'text-zinc-500 hover:text-white'}`}>Leaderboard</Link>
         {isAuthenticated && (
           <Link to="/history" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/history') ? 'text-white' : 'text-zinc-500 hover:text-white'}`}>History</Link>
+        )}
+        {isAuthenticated && (
+          <Link to="/duel" className={`text-sm tracking-wide font-semibold flex items-center gap-1.5 transition-colors ${location.pathname.includes('/duel') ? 'text-primary' : 'text-zinc-500 hover:text-primary'}`}>
+            <Swords className="w-4 h-4" /> Duel
+          </Link>
         )}
         {isAuthenticated && user?.role === 'admin' && (
           <Link to="/admin" className={`text-sm tracking-wide font-semibold transition-colors ${location.pathname.includes('/admin') ? 'text-cyan-400' : 'text-zinc-500 hover:text-cyan-400'}`}>Admin</Link>
@@ -68,6 +73,11 @@ export default function Navbar() {
           <Link to="/leaderboard" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-zinc-300 hover:text-white">Leaderboard</Link>
           {isAuthenticated && (
             <Link to="/history" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-zinc-300 hover:text-white">History</Link>
+          )}
+          {isAuthenticated && (
+            <Link to="/duel" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-primary flex items-center gap-2">
+              <Swords className="w-5 h-5" /> Duel Mode
+            </Link>
           )}
           {isAuthenticated && user?.role === 'admin' && (
             <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-cyan-400">Admin</Link>

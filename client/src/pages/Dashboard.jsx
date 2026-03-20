@@ -135,9 +135,9 @@ export default function Dashboard() {
           </div>
           <div className="space-y-3">
             {[
+              { title: 'Duel Mode', desc: 'Real-time competitive coding', to: '/duel' },
               { title: 'Browse Problems', desc: 'Find your next challenge', to: '/problems' },
               { title: 'Leaderboard', desc: 'See where you rank globally', to: '/leaderboard' },
-              { title: 'Submission History', desc: 'Review past attempts', to: '/history' },
             ].map(({ title, desc, to }, i) => (
               <Link
                 key={i}
