@@ -54,12 +54,14 @@ class DuelService {
       selectedProblems.push(...more);
     }
 
+    const players = [{ user: user1Id }];
+    if (user2Id && user2Id !== user1Id) {
+      players.push({ user: user2Id });
+    }
+
     // Create Duel in DB
     const duelDoc = new Duel({
-      players: [
-        { user: user1Id },
-        { user: user2Id }
-      ],
+      players: players,
       problems: selectedProblems.map((p) => ({ problem: p._id })),
       status: "pending",
     });

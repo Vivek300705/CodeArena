@@ -220,9 +220,13 @@ export default function DuelArena() {
             </div>
 
             {/* Player 2 */}
-            <div className="text-center bg-white/5 p-2 rounded-xl border border-white/10">
-                <div className="text-sm font-bold text-white truncate">{opponents[1]?.username || "Player 2"}</div>
-                <div className="text-2xl font-black text-blue-500">{scores[opponents[1]?._id] || 0}</div>
+            <div className={`text-center p-2 rounded-xl border transition-all ${opponents[1] ? 'bg-white/5 border-white/10' : 'bg-blue-500/5 border-blue-500/20 border-dashed animate-pulse'}`}>
+                <div className="text-sm font-bold text-white truncate">
+                  {opponents[1]?.username || "Waiting..."}
+                </div>
+                <div className="text-2xl font-black text-blue-500">
+                  {opponents[1] ? (scores[opponents[1]?._id] || 0) : "-"}
+                </div>
             </div>
         </div>
 
@@ -274,6 +278,16 @@ export default function DuelArena() {
                 <option key={lang.id} value={lang.id} className="bg-surface text-foreground">{lang.name}</option>
               ))}
             </select>
+            <div className="h-4 w-px bg-white/10" />
+            <button
+               onClick={() => {
+                 navigator.clipboard.writeText(id);
+                 alert("Room code copied!");
+               }}
+               className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs font-bold transition-colors border border-white/10"
+            >
+               Code: <span className="text-primary">{id.substring(0, 8)}...</span>
+            </button>
           </div>
           <button 
             onClick={handleCancelDuel}
