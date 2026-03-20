@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { motion } from 'framer-motion';
@@ -34,6 +35,7 @@ const VERDICT_STYLE = {
 };
 
 export default function DuelArena() {
+  useDocumentTitle('Duel Arena');
   const { id } = useParams();
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();

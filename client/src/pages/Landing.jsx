@@ -2,7 +2,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Hero3D from '../components/Hero3D.jsx';
 import { Code2, Trophy, Cpu, Zap, Target, Layers, ArrowRight, CheckCircle, Activity, Users } from 'lucide-react';
-import { useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 
 // Animation variants for staggered list
 const containerVariants = {
@@ -21,6 +22,7 @@ const itemVariants = {
 };
 
 export default function Landing() {
+  useDocumentTitle('Home');
   const { scrollYProgress } = useScroll();
   const yHeroText = useTransform(scrollYProgress, [0, 1], [0, 400]);
   const opacityHeroText = useTransform(scrollYProgress, [0, 0.2], [1, 0]);

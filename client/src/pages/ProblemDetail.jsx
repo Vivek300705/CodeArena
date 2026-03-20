@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { motion } from 'framer-motion';
@@ -49,6 +50,8 @@ export default function ProblemDetail() {
   const [problem, setProblem] = useState(null);
   const [problemLoading, setProblemLoading] = useState(true);
   const [problemError, setProblemError] = useState(null);
+  
+  useDocumentTitle(problem ? problem.title : 'Problem');
 
   // Editor
   const [language, setLanguage] = useState('javascript');

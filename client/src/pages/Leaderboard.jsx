@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Loader2, AlertCircle, RefreshCw, User, Star } from 'lucide-react';
 import { getLeaderboard, getMyRank } from '../services/leaderboardService.js';
@@ -18,6 +19,7 @@ const getRankStyle = (rank) => {
 };
 
 export default function Leaderboard() {
+  useDocumentTitle('Leaderboard');
   const [entries, setEntries] = useState([]);
   const [myRank, setMyRank] = useState(null);
   const [loading, setLoading] = useState(true);

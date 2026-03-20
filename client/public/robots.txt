@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /problems
+Allow: /leaderboard
+Disallow: /admin
+Disallow: /duel/
+Disallow: /history
+Disallow: /api/
+
+Sitemap: https://codearena.sbs/sitemap.xml

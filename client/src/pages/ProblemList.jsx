@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, Check, ChevronLeft, ChevronRight, RefreshCw, AlertCircle } from 'lucide-react';
@@ -18,6 +19,7 @@ const getDifficultyColor = (diff) => {
 const ITEMS_PER_PAGE = 10;
 
 export default function ProblemList() {
+  useDocumentTitle('Problems');
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All');

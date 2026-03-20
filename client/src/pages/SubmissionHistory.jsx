@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { History, CheckCircle, XCircle, AlertCircle, Clock, Search, Loader2 } from 'lucide-react';
@@ -31,6 +32,7 @@ const getStatusBadge = (status) => {
 const LANG_DISPLAY = { python: 'Python 3', javascript: 'JavaScript', node: 'Node.js', cpp: 'C++', c: 'C', java: 'Java', go: 'Go', rust: 'Rust' };
 
 export default function SubmissionHistory() {
+  useDocumentTitle('Submissions');
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
