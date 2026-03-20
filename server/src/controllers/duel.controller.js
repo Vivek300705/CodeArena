@@ -73,7 +73,7 @@ export const getDuel = async (req, res, next) => {
     const activeMatch = await matchEngine.getMatch(id);
     const duelDoc = await Duel.findById(id)
       .populate("players.user", "username")
-      .populate("problems.problem", "title difficulty description boilerplates"); // Added description and boilerplates
+      .populate("problems.problem", "title difficulty description boilerplates examples tags timeLimit memoryLimit");
 
     if (!duelDoc) {
       return res.status(404).json({ success: false, message: "Duel not found" });

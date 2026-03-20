@@ -248,10 +248,50 @@ export default function DuelArena() {
         {/* Problem Body */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar text-zinc-300">
           <div className="flex gap-3 mb-6">
-             <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase bg-white/10">{activeProblem?.difficulty}</span>
+             <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wide border text-zinc-400 bg-white/5 border-white/10">{activeProblem?.difficulty}</span>
+             {(activeProblem?.tags || []).map(tag => (
+                 <span key={tag} className="text-xs px-2.5 py-1 text-zinc-400 bg-white/5 border border-white/10 rounded-full">
+                     {tag}
+                 </span>
+             ))}
           </div>
-          <div className="prose prose-invert max-w-none">
-             {activeProblem?.description}
+
+          <div className="prose prose-invert max-w-none text-zinc-300 leading-relaxed">
+             {(activeProblem?.description || '').split('\n\n').map((paragraph, i) => (
+                 <p key={i} className="mb-4">{paragraph}</p>
+             ))}
+
+             {(activeProblem?.examples || []).length > 0 && (
+                 <>
+                     <h3 className="text-white font-bold text-lg mt-8 mb-4">Examples:</h3>
+                     <div className="space-y-6">
+                         {activeProblem.examples.map((ex, i) => (
+                             <div key={i} className="bg-surface/50 border border-white/10 rounded-xl p-4 font-mono text-sm overflow-x-auto">
+                                 <div className="mb-2"><span className="text-zinc-500">Input: </span><span className="text-cyan-400">{ex.input}</span></div>
+                                 <div className="mb-2"><span className="text-zinc-500">Output: </span><span className="text-green-400">{ex.output}</span></div>
+                                 {ex.explanation && <div><span className="text-zinc-500">Explanation: </span><span className="text-zinc-300 font-sans">{ex.explanation}</span></div>}
+                             </div>
+                         ))}
+                     </div>
+                 </>
+             )}
+
+             <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/5">
+                <div className="bg-surface p-4 rounded-xl border border-white/5 flex items-center gap-3">
+                  <Clock className="text-primary w-5 h-5" />
+                  <div>
+                    <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Time Limit</div>
+                    <div className="font-mono text-sm mt-0.5">{activeProblem?.timeLimit || 1000}s</div>
+                  </div>
+                </div>
+                <div className="bg-surface p-4 rounded-xl border border-white/5 flex items-center gap-3">
+                  <Cpu className="text-purple-400 w-5 h-5" />
+                  <div>
+                    <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Memory Limit</div>
+                    <div className="font-mono text-sm mt-0.5">{activeProblem?.memoryLimit || 256} MB</div>
+                  </div>
+                </div>
+             </div>
           </div>
           {/* Powerups Panel */}
           <div className="mt-8 pt-8 border-t border-white/5">
