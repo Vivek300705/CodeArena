@@ -1,0 +1,291 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import Editor from '@monaco-editor/react';
+import { motion } from 'framer-motion';
+import {
+  Play, Send, Clock, Cpu, ChevronLeft,
+  CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2, Zap, Swords
+} from 'lucide-react';
+import { getDuel, triggerPowerup } from '../services/duelService.js';
+import { submitCode, getSubmissionById } from '../services/problemService.js';
+import { useSocket } from '../hooks/useSocket.js';
+import { useAuth } from '../hooks/useAuth.js'; // Assuming there's a useAuth hook to get current user ID
+
+const LANGUAGES = [
+  { id: 'javascript', name: 'JavaScript (Node.js)', ext: 'js' },
+  { id: 'python',     name: 'Python 3',             ext: 'py' },
+  { id: 'cpp',        name: 'C++ 17',               ext: 'cpp' },
+  { id: 'java',       name: 'Java',                 ext: 'java' },
+];
+
+const DEFAULT_CODE = {
+  javascript: '// Write your solution here\n',
+  python:     '# Write your solution here\n',
+  cpp:        '// Write your solution here\n',
+  java:       '// Write your solution here\n',
+};
+
+const VERDICT_STYLE = {
+  Accepted:            { color: 'text-green-500', icon: <CheckCircle className="w-5 h-5" /> },
+  'Wrong Answer':      { color: 'text-red-400',   icon: <XCircle className="w-5 h-5" /> },
+  'Runtime Error':     { color: 'text-red-400',   icon: <XCircle className="w-5 h-5" /> },
+  'Time Limit Exceeded': { color: 'text-yellow-400', icon: <Clock className="w-5 h-5" /> },
+};
+
+export default function DuelArena() {
+  const { id } = useParams();
+  const { user } = useAuth(); // Assuming this provides the logged in user info. If not, we fall back to state.
+  
+  const [duelData, setDuelData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeProblemIndex, setActiveProblemIndex] = useState(0);
+
+  // Scoreboard state
+  const [scores, setScores] = useState({}); // userId -> score
+  const [opponentSubmissions, setOpponentSubmissions] = useState([]);
+
+  // Editor State
+  const [language, setLanguage] = useState('javascript');
+  const [code, setCode] = useState(DEFAULT_CODE['javascript']);
+
+  // Submission State
+  const [submissionId, setSubmissionId] = useState(null);
+  const submissionIdRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verdict, setVerdict] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+
+  // Fetch Duel
+  useEffect(() => {
+    setLoading(true);
+    getDuel(id)
+      .then((data) => {
+        setDuelData(data.duel);
+        
+        // Setup initial scores
+        const newScores = {};
+        data.duel.players.forEach(p => {
+           if (p.user) newScores[p.user._id] = p.score;
+        });
+        
+        // If active state exists in Redis, it overrides
+        if (data.activeState) {
+           newScores[data.activeState.player1] = parseInt(data.activeState.score1 || 0);
+           newScores[data.activeState.player2] = parseInt(data.activeState.score2 || 0);
+        }
+        setScores(newScores);
+
+        // Set initial code
+        if (data.duel.problems?.length > 0) {
+          const bp = data.duel.problems[0].problem.boilerplates?.find(b => b.language === 'javascript' || b.language === 'node');
+          if (bp) setCode(bp.code);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // Socket setup
+  const socketRef = useRef(null);
+  
+  const handleSocketEvents = useCallback((data, type) => {
+    if (type === "submission_update") {
+       if (!submissionIdRef.current || data.submissionId !== submissionIdRef.current) return;
+       setVerdict(data);
+       setIsSubmitting(false);
+    } else if (type === "duel_score_update") {
+       setScores(prev => ({ ...prev, [data.userId]: data.newScore }));
+    } else if (type === "duel_submission_update") {
+       // Opponent or current user submitted
+       setOpponentSubmissions(prev => [data, ...prev].slice(0, 5));
+    } else if (type === "powerup_used") {
+       // Add visual effect
+       console.log("Powerup used:", data);
+    }
+  }, []);
+
+  const socket = useSocket((data) => handleSocketEvents(data, "submission_update"));
+
+  useEffect(() => {
+    if (socket && id) {
+      socket.emit("join_duel", id);
+      
+      socket.on("duel_score_update", (data) => handleSocketEvents(data, "duel_score_update"));
+      socket.on("duel_submission_update", (data) => handleSocketEvents(data, "duel_submission_update"));
+      socket.on("powerup_used", (data) => handleSocketEvents(data, "powerup_used"));
+      
+      return () => {
+         socket.off("duel_score_update");
+         socket.off("duel_submission_update");
+         socket.off("powerup_used");
+      }
+    }
+  }, [socket, id, handleSocketEvents]);
+
+  // Polling fallback
+  useEffect(() => {
+    if (!isSubmitting || !submissionIdRef.current) return;
+    const intervalId = setInterval(async () => {
+      try {
+        const sub = await getSubmissionById(submissionIdRef.current);
+        if (sub && sub.status === 'completed') {
+          setVerdict(sub);
+          setIsSubmitting(false);
+          clearInterval(intervalId);
+        }
+      } catch (e) { }
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, [isSubmitting, submissionId]);
+
+
+  const handleSubmit = async () => {
+    const activeProblem = duelData?.problems[activeProblemIndex]?.problem;
+    if (!activeProblem) return;
+
+    setIsSubmitting(true);
+    setVerdict(null);
+    setSubmitError(null);
+    try {
+      const submission = await submitCode({
+        problemId: activeProblem._id,
+        code,
+        language: language === 'javascript' ? 'node' : language,
+      });
+      submissionIdRef.current = submission._id;
+      setSubmissionId(submission._id);
+    } catch (err) {
+      setSubmitError(err.response?.data?.message || 'Submission failed.');
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUsePowerup = async (type) => {
+    try {
+      await triggerPowerup(id, type);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-white">Loading Duel Arena...</div>;
+  if (!duelData) return <div className="p-8 text-center text-red-500">Duel not found</div>;
+
+  const activeProblem = duelData.problems[activeProblemIndex]?.problem;
+  const opponents = duelData.players.map(p => p.user);
+
+  return (
+    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background overflow-hidden">
+      
+      {/* Left Panel: Duel Status & Problem Description */}
+      <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col border-r border-white/5 bg-surface/30">
+        
+        {/* Scoreboard Header */}
+        <div className="p-4 border-b border-white/5 bg-surface/50 grid grid-cols-3 gap-4 items-center">
+            {/* Player 1 */}
+            <div className="text-center bg-white/5 p-2 rounded-xl border border-white/10">
+                <div className="text-sm font-bold text-white truncate">{opponents[0]?.username || "Player 1"}</div>
+                <div className="text-2xl font-black text-primary">{scores[opponents[0]?._id] || 0}</div>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center">
+                <Swords className="w-8 h-8 text-red-500 mb-1" />
+                <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">VS</span>
+            </div>
+
+            {/* Player 2 */}
+            <div className="text-center bg-white/5 p-2 rounded-xl border border-white/10">
+                <div className="text-sm font-bold text-white truncate">{opponents[1]?.username || "Player 2"}</div>
+                <div className="text-2xl font-black text-blue-500">{scores[opponents[1]?._id] || 0}</div>
+            </div>
+        </div>
+
+        {/* Problem Tabs */}
+        <div className="flex border-b border-white/5">
+            {duelData.problems.map((p, i) => (
+                <button
+                    key={p.problem._id}
+                    onClick={() => setActiveProblemIndex(i)}
+                    className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                        i === activeProblemIndex ? 'bg-primary/20 text-primary border-b-2 border-primary' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
+                    }`}
+                >
+                    P{i+1}: {p.problem.title.substring(0, 10)}...
+                </button>
+            ))}
+        </div>
+
+        {/* Problem Body */}
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar text-zinc-300">
+          <div className="flex gap-3 mb-6">
+             <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase bg-white/10">{activeProblem?.difficulty}</span>
+          </div>
+          <div className="prose prose-invert max-w-none">
+             {activeProblem?.description}
+          </div>
+          {/* Powerups Panel */}
+          <div className="mt-8 pt-8 border-t border-white/5">
+             <h3 className="text-sm font-bold text-zinc-500 mb-4 uppercase">Powerups</h3>
+             <div className="flex gap-2">
+                 <button onClick={() => handleUsePowerup('freeze')} className="px-3 py-1.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-lg text-sm hover:bg-cyan-500/20"><Zap className="w-4 h-4 inline mr-1"/> Freeze</button>
+                 <button onClick={() => handleUsePowerup('hint')} className="px-3 py-1.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-lg text-sm hover:bg-yellow-500/20 text-sm">Hint</button>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel: Editor & Console */}
+      <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col">
+        {/* Editor Toolbar */}
+        <div className="h-14 border-b border-white/5 bg-background flex items-center justify-between px-4">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="bg-transparent text-sm font-medium outline-none text-zinc-300 hover:text-white cursor-pointer"
+          >
+            {LANGUAGES.map(lang => (
+              <option key={lang.id} value={lang.id} className="bg-surface text-foreground">{lang.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Editor */}
+        <div className="flex-1 relative">
+          <Editor
+            height="100%"
+            language={language}
+            theme="vs-dark"
+            value={code}
+            onChange={(value) => setCode(value)}
+            options={{ minimap: { enabled: false }, fontSize: 14 }}
+          />
+        </div>
+
+        {/* Console */}
+        <div className="h-[200px] border-t border-white/5 bg-background flex flex-col shrink-0">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-surface/30 text-sm font-medium text-zinc-400">
+            Console
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto font-mono text-sm">
+             {isSubmitting ? (
+              <div className="flex items-center text-zinc-500 gap-3"><Loader2 className="w-4 h-4 animate-spin text-primary" /> Judging...</div>
+            ) : submitError ? (
+              <div className="text-red-400">{submitError}</div>
+            ) : verdict ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className={`font-bold text-lg flex items-center gap-2 ${VERDICT_STYLE[verdict.verdict]?.color || 'text-zinc-300'}`}>
+                  {verdict.verdict}
+                </div>
+              </motion.div>
+            ) : null}
+          </div>
+          <div className="p-3 border-t border-white/5 bg-surface/30 flex justify-end gap-3">
+             <button onClick={handleSubmit} disabled={isSubmitting} className="px-6 py-2 bg-primary text-white rounded-lg font-medium shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:bg-primary-hover disabled:opacity-50 flex items-center gap-2">
+                <Send className="w-4 h-4" /> Submit
+             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

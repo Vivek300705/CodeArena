@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import logger from "../config/logger.js";
 import { createRedisClient } from "../config/redis.js";
+import matchEngine from "../services/matchEngine.js";
+import duelService from "../services/duelService.js";
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -72,7 +74,7 @@ export const initSocket = (server) => {
     .then((redisSub) => {
       logger.info("📡 Redis Subscribed for Socket updates");
       
-      return redisSub.subscribe("SUBMISSION_UPDATED", (message) => {
+      return redisSub.subscribe("SUBMISSION_UPDATED", async (message) => {
         const data = JSON.parse(message);
         // Emit to the room named after the userId
         io.to(data.userId).emit("submission_update", data);
@@ -80,6 +82,38 @@ export const initSocket = (server) => {
           { submissionId: data.submissionId, verdict: data.verdict },
           "Real-time update emitted to user",
         );
+
+        // Duel System Integration
+        try {
+          const activeMatchId = await matchEngine.getActiveMatchForUser(data.userId);
+          if (activeMatchId) {
+            const duelData = await duelService.processSubmissionVerdict(
+              activeMatchId,
+              data.userId,
+              data.problemId,
+              data.verdict
+            );
+            
+            // Broadcast submission to duel room
+            io.to(`duel:${activeMatchId}`).emit("duel_submission_update", {
+              userId: data.userId,
+              problemId: data.problemId,
+              verdict: data.verdict,
+              pointsEarned: duelData?.points || 0,
+              isFirstSolver: duelData?.isFirstSolver || false
+            });
+
+            // If score changed, broadcast
+            if (duelData && duelData.points !== 0) {
+              io.to(`duel:${activeMatchId}`).emit("duel_score_update", {
+                userId: data.userId,
+                newScore: duelData.newScore,
+              });
+            }
+          }
+        } catch (err) {
+          logger.error("Error processing duel submission:", err);
+        }
       });
     })
     .catch((err) => logger.error("Redis Socket Connection Error:", err));
@@ -94,6 +128,21 @@ export const initSocket = (server) => {
       socket.join(userId);
       logger.info(`User ${userId} joined room`);
     }
+
+    // Duel Events
+    socket.on("join_duel", (matchId) => {
+      socket.join(`duel:${matchId}`);
+      logger.info(`User ${userId} joined duel ${matchId}`);
+    });
+
+    socket.on("duel_powerup", (data) => {
+      const { matchId, powerupType } = data;
+      // Broadcast powerup usage
+      io.to(`duel:${matchId}`).emit("powerup_used", {
+        usedBy: userId,
+        powerupType
+      });
+    });
 
     socket.on("disconnect", () => {
       logger.info(`Socket disconnected: ${socket.id}`);

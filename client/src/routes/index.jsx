@@ -11,6 +11,8 @@ import Leaderboard from '../pages/Leaderboard.jsx';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 import ProtectedAdminRoute from '../components/ProtectedAdminRoute.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
+import DuelDashboard from '../pages/DuelDashboard.jsx';
+import DuelArena from '../pages/DuelArena.jsx';
 
 function NotFound() {
   return (
@@ -47,6 +49,14 @@ export const router = createBrowserRouter([
         element: <ProtectedAdminRoute />,
         children: [
           { index: true, element: <AdminDashboard /> },
+        ],
+      },
+      {
+        path: 'duel',
+        element: <ProtectedRoute />,
+        children: [
+          { index: true, element: <DuelDashboard /> },
+          { path: ':id', element: <DuelArena /> },
         ],
       },
       { path: '*', element: <NotFound /> },
