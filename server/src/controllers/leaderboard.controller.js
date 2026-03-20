@@ -6,6 +6,7 @@ import {
 } from "../services/leaderboard.service.js";
 import { getCache, setCache } from "../services/cache.service.js";
 import logger from "../config/logger.js";
+import User from "../models/User.model.js";
 
 /**
  * @desc  Get top-50 leaderboard (cached 60s)
@@ -22,7 +23,23 @@ export const getLeaderboardHandler = async (req, res, next) => {
       return res.json({ success: true, cached: true, data: cached });
     }
 
-    const data = await getLeaderboard(topN);
+    const rawData = await getLeaderboard(topN);
+
+    // Fetch usernames for the userIds from MongoDB
+    const userIds = rawData.map(entry => entry.userId);
+    const users = await User.find({ _id: { $in: userIds } }).select("username");
+    
+    // Create a map for quick lookup
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id.toString()] = user.username;
+      return acc;
+    }, {});
+
+    // Enrich the data with usernames
+    const data = rawData.map(entry => ({
+      ...entry,
+      username: userMap[entry.userId] || "Unknown Coder"
+    }));
 
     // Cache the result
     await setCache(LEADERBOARD_CACHE_KEY, data, LEADERBOARD_CACHE_TTL);

@@ -136,10 +136,10 @@ export default function Leaderboard() {
                       <User className="w-4 h-4 text-white/70" />
                     </div>
                     <div>
-                      <div className="font-semibold text-sm text-zinc-200 font-mono truncate max-w-[200px]">
+                      <div className="font-semibold text-sm text-zinc-200 font-sans truncate max-w-[250px]">
                         {isMe ? (
-                          <span className="text-primary">{entry.userId} <span className="text-xs">(you)</span></span>
-                        ) : entry.userId}
+                          <span className="text-primary">{entry.username || "Unknown"} <span className="text-xs">(you)</span></span>
+                        ) : (entry.username || "Unknown")}
                       </div>
                     </div>
                   </div>
