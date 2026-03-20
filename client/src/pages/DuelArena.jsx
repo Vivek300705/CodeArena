@@ -48,7 +48,24 @@ export default function DuelArena() {
 
   // Editor State
   const [language, setLanguage] = useState('javascript');
-  const [code, setCode] = useState(DEFAULT_CODE['javascript']);
+  const [codes, setCodes] = useState({}); // problemId -> code string
+
+  const activeProblem = duelData?.problems[activeProblemIndex]?.problem;
+  const currentCode = activeProblem ? (codes[activeProblem._id] ?? "") : "";
+
+  // Initialize boilerplate when switching problems or languages
+  useEffect(() => {
+    if (activeProblem && codes[activeProblem._id] === undefined) {
+      const langMatch = language === 'javascript' ? 'node' : language;
+      const bp = activeProblem.boilerplates?.find(b => b.language === langMatch || b.language === language);
+      setCodes(prev => ({ ...prev, [activeProblem._id]: bp ? bp.code : DEFAULT_CODE[language] }));
+    }
+  }, [activeProblem, language, codes]);
+
+  const handleLanguageChange = (e) => {
+    setLanguage(e.target.value);
+    setCodes({}); // Reset all local code to new language's boilerplates
+  };
 
   // Submission State
   const [submissionId, setSubmissionId] = useState(null);
@@ -77,11 +94,7 @@ export default function DuelArena() {
         }
         setScores(newScores);
 
-        // Set initial code
-        if (data.duel.problems?.length > 0) {
-          const bp = data.duel.problems[0].problem.boilerplates?.find(b => b.language === 'javascript' || b.language === 'node');
-          if (bp) setCode(bp.code);
-        }
+        // Editor boilerplate is now handled by the useEffect above
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -154,9 +167,7 @@ export default function DuelArena() {
     return () => clearInterval(intervalId);
   }, [isSubmitting, submissionId]);
 
-
   const handleSubmit = async () => {
-    const activeProblem = duelData?.problems[activeProblemIndex]?.problem;
     if (!activeProblem) return;
 
     setIsSubmitting(true);
@@ -165,7 +176,7 @@ export default function DuelArena() {
     try {
       const submission = await submitCode({
         problemId: activeProblem._id,
-        code,
+        code: currentCode,
         language: language === 'javascript' ? 'node' : language,
       });
       submissionIdRef.current = submission._id;
@@ -197,7 +208,6 @@ export default function DuelArena() {
   if (loading) return <div className="p-8 text-center text-white">Loading Duel Arena...</div>;
   if (!duelData) return <div className="p-8 text-center text-red-500">Duel not found</div>;
 
-  const activeProblem = duelData.problems[activeProblemIndex]?.problem;
   const opponents = duelData.players.map(p => p.user);
 
   return (
@@ -311,7 +321,7 @@ export default function DuelArena() {
           <div className="flex items-center gap-4">
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={handleLanguageChange}
               className="bg-transparent text-sm font-medium outline-none text-zinc-300 hover:text-white cursor-pointer"
             >
               {LANGUAGES.map(lang => (
@@ -343,8 +353,8 @@ export default function DuelArena() {
             height="100%"
             language={language}
             theme="vs-dark"
-            value={code}
-            onChange={(value) => setCode(value)}
+            value={currentCode}
+            onChange={(val) => setCodes(prev => ({ ...prev, [activeProblem._id]: val }))}
             options={{ minimap: { enabled: false }, fontSize: 14 }}
           />
         </div>
