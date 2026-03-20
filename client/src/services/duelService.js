@@ -1,4 +1,4 @@
-import api from './api.js';
+import { api } from './api.js';
 
 export const challengeUser = async (opponentId) => {
   const response = await api.post('/v1/duel/challenge', { opponentId });

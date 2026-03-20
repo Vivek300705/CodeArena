@@ -9,7 +9,7 @@ import {
 import { getDuel, triggerPowerup, cancelDuel } from '../services/duelService.js';
 import { submitCode, getSubmissionById } from '../services/problemService.js';
 import { useSocket } from '../hooks/useSocket.js';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuthStore } from '../store/useAuthStore.js';
 import { useNavigate } from 'react-router-dom';
 
 const LANGUAGES = [
@@ -35,7 +35,7 @@ const VERDICT_STYLE = {
 
 export default function DuelArena() {
   const { id } = useParams();
-  const { user } = useAuth(); 
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   
   const [duelData, setDuelData] = useState(null);
