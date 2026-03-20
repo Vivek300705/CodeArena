@@ -149,5 +149,7 @@ export const initSocket = (server) => {
     });
   });
 
+  duelService.setIo(io);
+
   return io;
 };

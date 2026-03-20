@@ -101,6 +101,13 @@ export default function DuelArena() {
     } else if (type === "powerup_used") {
        // Add visual effect
        console.log("Powerup used:", data);
+    } else if (type === "match:start") {
+       setDuelData(prev => ({ 
+         ...prev, 
+         status: "active", 
+         startTime: data.startTime,
+         problems: data.problems.map(p => ({ problem: p }))
+       }));
     }
   }, []);
 
@@ -113,11 +120,13 @@ export default function DuelArena() {
       socket.on("duel_score_update", (data) => handleSocketEvents(data, "duel_score_update"));
       socket.on("duel_submission_update", (data) => handleSocketEvents(data, "duel_submission_update"));
       socket.on("powerup_used", (data) => handleSocketEvents(data, "powerup_used"));
+      socket.on("match:start", (data) => handleSocketEvents(data, "match:start"));
       
       return () => {
          socket.off("duel_score_update");
          socket.off("duel_submission_update");
          socket.off("powerup_used");
+         socket.off("match:start");
       }
     }
   }, [socket, id, handleSocketEvents]);

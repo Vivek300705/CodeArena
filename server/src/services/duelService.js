@@ -39,10 +39,16 @@ class DuelService {
     const hard = await this.getUnsolvedProblems(user1Id, user2Id, "hard", 1);
 
     const selectedProblems = [...easy, ...mid, ...hard];
-    // If we couldn't find 3 specific difficulty ones, just grab 3 random
+    // If we couldn't find 3 specific difficulty ones, just grab random ones that are NOT already selected
     if (selectedProblems.length < 3) {
+      const existingIds = selectedProblems.map(p => p._id);
       const more = await Problem.aggregate([
-        { $match: { isDeleted: false } },
+        {
+          $match: {
+            isDeleted: false,
+            _id: { $nin: existingIds }
+          }
+        },
         { $sample: { size: 3 - selectedProblems.length } },
       ]);
       selectedProblems.push(...more);
@@ -76,7 +82,25 @@ class DuelService {
     const problems = duel.problems.map((p) => p.problem);
 
     await matchEngine.createMatch(duelId, [p1, p2], problems);
+
+    // Notify clients that match has started
+    if (this.io) {
+      this.io.to(`duel:${duelId}`).emit("match:start", {
+        matchId: duelId,
+        startTime: duel.startTime,
+        problems: problems.map(p => ({
+          _id: p._id,
+          title: p.title,
+          difficulty: p.difficulty
+        }))
+      });
+    }
+
     return duel;
+  }
+
+  setIo(io) {
+    this.io = io;
   }
 
   async processSubmissionVerdict(matchId, userId, problemId, verdict, wrongAttemptsCount = 0) {
