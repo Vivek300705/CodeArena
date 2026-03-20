@@ -30,6 +30,10 @@ const UserSchema = new mongoose.Schema(
       enum: ["contestant", "admin"],
       default: "contestant",
     },
+    elo: {
+      type: Number,
+      default: 1200,
+    },
   },
   { timestamps: true },
 );

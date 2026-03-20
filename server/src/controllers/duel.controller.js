@@ -6,7 +6,7 @@ import matchEngine from "../services/matchEngine.js";
 // Starts a pending match, returning the room code / duelId
 export const challengeUser = async (req, res, next) => {
   try {
-    const user1Id = req.user.id;
+    const user1Id = req.user.userId;
     const { opponentId } = req.body; // Can be empty for random matchmaking or specific user
 
     // For now we assume a specific opponent
@@ -32,7 +32,7 @@ export const challengeUser = async (req, res, next) => {
 export const acceptChallenge = async (req, res, next) => {
   try {
     const { duelId } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const duel = await Duel.findById(duelId);
     if (!duel) {
@@ -90,7 +90,7 @@ export const triggerPowerup = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { powerupType } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const activeMatch = await matchEngine.getMatch(id);
     if (!activeMatch) {
@@ -120,7 +120,7 @@ export const triggerPowerup = async (req, res, next) => {
 // GET /duel/history
 export const getDuelHistory = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const history = await Duel.find({
       "players.user": userId,
