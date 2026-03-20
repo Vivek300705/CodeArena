@@ -24,3 +24,8 @@ export const getDuelHistory = async () => {
   const response = await api.get('/v1/duel/history');
   return response.data.data;
 };
+
+export const cancelDuel = async (id) => {
+  const response = await api.post(`/v1/duel/${id}/cancel`);
+  return response.data;
+};

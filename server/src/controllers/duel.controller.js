@@ -139,3 +139,13 @@ export const getDuelHistory = async (req, res, next) => {
     next(error);
   }
 };
+
+export const cancelDuel = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await duelService.cancelDuel(id);
+    res.status(200).json({ success: true, message: "Duel cancelled" });
+  } catch (error) {
+    next(error);
+  }
+};

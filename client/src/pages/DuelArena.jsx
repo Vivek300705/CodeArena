@@ -4,12 +4,13 @@ import Editor from '@monaco-editor/react';
 import { motion } from 'framer-motion';
 import {
   Play, Send, Clock, Cpu, ChevronLeft,
-  CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2, Zap, Swords
+  CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2, Zap, Swords, Ban
 } from 'lucide-react';
-import { getDuel, triggerPowerup } from '../services/duelService.js';
+import { getDuel, triggerPowerup, cancelDuel } from '../services/duelService.js';
 import { submitCode, getSubmissionById } from '../services/problemService.js';
 import { useSocket } from '../hooks/useSocket.js';
-import { useAuth } from '../hooks/useAuth.js'; // Assuming there's a useAuth hook to get current user ID
+import { useAuth } from '../hooks/useAuth.js';
+import { useNavigate } from 'react-router-dom';
 
 const LANGUAGES = [
   { id: 'javascript', name: 'JavaScript (Node.js)', ext: 'js' },
@@ -34,7 +35,8 @@ const VERDICT_STYLE = {
 
 export default function DuelArena() {
   const { id } = useParams();
-  const { user } = useAuth(); // Assuming this provides the logged in user info. If not, we fall back to state.
+  const { user } = useAuth(); 
+  const navigate = useNavigate();
   
   const [duelData, setDuelData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -108,6 +110,9 @@ export default function DuelArena() {
          startTime: data.startTime,
          problems: data.problems.map(p => ({ problem: p }))
        }));
+    } else if (type === "duel_cancelled") {
+       alert("Matched has been cancelled.");
+       navigate("/duel");
     }
   }, []);
 
@@ -121,12 +126,14 @@ export default function DuelArena() {
       socket.on("duel_submission_update", (data) => handleSocketEvents(data, "duel_submission_update"));
       socket.on("powerup_used", (data) => handleSocketEvents(data, "powerup_used"));
       socket.on("match:start", (data) => handleSocketEvents(data, "match:start"));
+      socket.on("duel_cancelled", (data) => handleSocketEvents(data, "duel_cancelled"));
       
       return () => {
          socket.off("duel_score_update");
          socket.off("duel_submission_update");
          socket.off("powerup_used");
          socket.off("match:start");
+         socket.off("duel_cancelled");
       }
     }
   }, [socket, id, handleSocketEvents]);
@@ -174,6 +181,16 @@ export default function DuelArena() {
       await triggerPowerup(id, type);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleCancelDuel = async () => {
+    if (!window.confirm("Are you sure you want to cancel this duel?")) return;
+    try {
+       await cancelDuel(id);
+       navigate("/duel");
+    } catch (err) {
+       console.error(err);
     }
   };
 
@@ -247,15 +264,23 @@ export default function DuelArena() {
       <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col">
         {/* Editor Toolbar */}
         <div className="h-14 border-b border-white/5 bg-background flex items-center justify-between px-4">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="bg-transparent text-sm font-medium outline-none text-zinc-300 hover:text-white cursor-pointer"
+          <div className="flex items-center gap-4">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-transparent text-sm font-medium outline-none text-zinc-300 hover:text-white cursor-pointer"
+            >
+              {LANGUAGES.map(lang => (
+                <option key={lang.id} value={lang.id} className="bg-surface text-foreground">{lang.name}</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            onClick={handleCancelDuel}
+            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold transition-colors border border-red-500/20"
           >
-            {LANGUAGES.map(lang => (
-              <option key={lang.id} value={lang.id} className="bg-surface text-foreground">{lang.name}</option>
-            ))}
-          </select>
+            <Ban className="w-3.5 h-3.5" /> Cancel Duel
+          </button>
         </div>
 
         {/* Editor */}

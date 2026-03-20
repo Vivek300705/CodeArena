@@ -201,6 +201,27 @@ class DuelService {
     await duel.save();
     return duel;
   }
+
+  async cancelDuel(duelId) {
+    const duel = await Duel.findById(duelId);
+    if (!duel) throw new Error("Duel not found");
+
+    duel.status = "cancelled";
+    duel.endTime = new Date();
+    await duel.save();
+
+    await matchEngine.cancelMatch(duelId);
+
+    if (this.io) {
+      this.io.to(`duel:${duelId}`).emit("duel_cancelled", { duelId });
+    }
+
+    return duel;
+  }
+
+  setIo(io) {
+    this.io = io;
+  }
 }
 
 export default new DuelService();

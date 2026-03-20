@@ -88,12 +88,27 @@ class MatchEngine {
     await redisClient.hSet(matchKey, "status", "completed");
     const matchData = await this.getMatch(matchId);
     
-    // Optional: cleanup immediately, or let it expire
     // Cleanup reverse mapping
-    await redisClient.del(`active_match:${matchData.player1}`);
-    await redisClient.del(`active_match:${matchData.player2}`);
+    if (matchData) {
+      await redisClient.del(`active_match:${matchData.player1}`);
+      await redisClient.del(`active_match:${matchData.player2}`);
+    }
 
     return matchData;
+  }
+
+  async cancelMatch(matchId) {
+    const matchKey = `${DUEL_PREFIX}${matchId}`;
+    const matchData = await this.getMatch(matchId);
+    
+    await redisClient.hSet(matchKey, "status", "cancelled");
+    
+    if (matchData) {
+      await redisClient.del(`active_match:${matchData.player1}`);
+      await redisClient.del(`active_match:${matchData.player2}`);
+    }
+    
+    // Optionally delete the match key entirely or wait for TTL
   }
 }
 
