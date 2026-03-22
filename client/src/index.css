@@ -1,18 +1,233 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Custom Properties ─────────────────────────────────────── */
+:root {
+  --glow-cyan: rgba(0, 245, 255, 0.4);
+  --glow-blue: rgba(59, 130, 246, 0.4);
+  --glow-purple: rgba(168, 85, 247, 0.4);
+  --glow-ember: rgba(249, 115, 22, 0.4);
+  --glow-green: rgba(34, 197, 94, 0.4);
+  --surface-glass: rgba(13, 13, 20, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+}
+
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/30 overflow-x-hidden;
+    @apply bg-background text-foreground antialiased selection:bg-neon-cyan/20 overflow-x-hidden;
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #03030a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 245, 255, 0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 245, 255, 0.4);
+  }
+}
+
+@layer components {
+  /* ── Glassmorphic Card ─────────────────────────────────────────── */
+  .glass-card {
+    background: var(--surface-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 1rem;
+  }
+
+  .glass-card-strong {
+    background: rgba(13, 13, 20, 0.85);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+  }
+
+  /* ── Neon Glow Text ────────────────────────────────────────────── */
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-blue-400 to-plasma;
+  }
+
+  .gradient-text-ember {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-ember via-red-500 to-pink-500;
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 20px rgba(0, 245, 255, 0.6), 0 0 40px rgba(0, 245, 255, 0.2);
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(168, 85, 247, 0.2);
+  }
+
+  /* ── Neon Borders ──────────────────────────────────────────────── */
+  .border-glow-cyan {
+    border-color: rgba(0, 245, 255, 0.4);
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.15), inset 0 0 15px rgba(0, 245, 255, 0.03);
+  }
+
+  .border-glow-purple {
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.15), inset 0 0 15px rgba(168, 85, 247, 0.03);
+  }
+
+  .border-glow-ember {
+    border-color: rgba(249, 115, 22, 0.4);
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.15), inset 0 0 15px rgba(249, 115, 22, 0.03);
+  }
+
+  /* ── Shimmer Button ────────────────────────────────────────────── */
+  .btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s ease;
+  }
+  .btn-shimmer:hover::after {
+    left: 100%;
+  }
+
+  /* ── Cyber Grid Background ─────────────────────────────────────── */
+  .cyber-grid {
+    background-image: 
+      linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── Scanline Overlay ──────────────────────────────────────────── */
+  .scanline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.3), transparent);
+    animation: scan 8s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── Tilt Card ─────────────────────────────────────────────────── */
+  .tilt-card {
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+  }
+
+  /* ── Glow Button Variants ──────────────────────────────────────── */
+  .btn-neon {
+    @apply px-8 py-3.5 font-bold rounded-xl transition-all duration-300 relative overflow-hidden;
+    background: linear-gradient(135deg, rgba(0, 245, 255, 0.15), rgba(59, 130, 246, 0.15));
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    color: #00f5ff;
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.1);
+  }
+  .btn-neon:hover {
+    background: linear-gradient(135deg, rgba(0, 245, 255, 0.25), rgba(59, 130, 246, 0.25));
+    box-shadow: 0 0 30px rgba(0, 245, 255, 0.25), 0 0 60px rgba(0, 245, 255, 0.1);
+    border-color: rgba(0, 245, 255, 0.6);
+  }
+
+  .btn-solid-neon {
+    @apply px-8 py-3.5 font-bold rounded-xl transition-all duration-300 relative overflow-hidden;
+    background: linear-gradient(135deg, #00c8e8, #3b82f6);
+    color: #000;
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+  }
+  .btn-solid-neon:hover {
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.5), 0 0 80px rgba(0, 245, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  /* ── Input Focus Glow ──────────────────────────────────────────── */
+  .input-glow {
+    @apply bg-surface border border-white/10 rounded-xl px-4 py-3 text-white transition-all duration-300 focus:outline-none;
+  }
+  .input-glow:focus {
+    border-color: rgba(0, 245, 255, 0.4);
+    box-shadow: 0 0 0 1px rgba(0, 245, 255, 0.2), 0 0 20px rgba(0, 245, 255, 0.1);
+  }
+
+  /* ── Status Badges ─────────────────────────────────────────────── */
+  .badge-accepted {
+    @apply px-3 py-1 rounded-full text-xs font-bold;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    color: #4ade80;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+  }
+  .badge-rejected {
+    @apply px-3 py-1 rounded-full text-xs font-bold;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
+  }
+  .badge-pending {
+    @apply px-3 py-1 rounded-full text-xs font-bold;
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    color: #facc15;
+  }
+
+  /* ── Difficulty Badges ─────────────────────────────────────────── */
+  .badge-easy {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-bold;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+  }
+  .badge-medium {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-bold;
+    background: rgba(234, 179, 8, 0.12);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    color: #facc15;
+  }
+  .badge-hard {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-bold;
+    background: rgba(249, 115, 22, 0.12);
+    border: 1px solid rgba(249, 115, 22, 0.3);
+    color: #fb923c;
+  }
+  .badge-extreme {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-bold;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.15);
   }
 }
 
 /* ── Portal / Modal stacking fix ──────────────────────────────────── */
-/* Tailwind backdrop-blur creates a new stacking context; we need
-   our React portal (mounted on <body>) to always win the z-battle.  */
 .modal-overlay {
   position: fixed !important;
   inset: 0 !important;
@@ -20,3 +235,47 @@
   isolation: isolate;
 }
 
+/* ── Custom Keyframe Animations ────────────────────────────────────── */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 245, 255, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(0, 245, 255, 0.6), 0 0 50px rgba(0, 245, 255, 0.2); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ── Animated gradient border ────────────────────────────────────── */
+.animated-border {
+  position: relative;
+}
+.animated-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(90deg, #00f5ff, #3b82f6, #8b5cf6, #00f5ff);
+  background-size: 300% 100%;
+  animation: shimmer 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
