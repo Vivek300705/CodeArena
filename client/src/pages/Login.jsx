@@ -141,8 +141,16 @@ export default function Login() {
                   className="input-glow w-full pl-10"
                   placeholder="••••••••"
                 />
+                {errors.password && (
+                  <p className="text-red-400 text-xs mt-1 absolute -bottom-5 left-0">{errors.password.message}</p>
+                )}
               </div>
-              {errors.password && <p className="mt-1.5 text-xs text-red-400">{errors.password.message}</p>}
+            </div>
+
+            <div className="flex items-center justify-end mb-8 mt-2">
+              <Link to="/forgot-password" className="text-xs font-bold text-zinc-400 hover:text-neon-cyan transition-colors">
+                Forgot Password?
+              </Link>
             </div>
 
             {/* Submit */}

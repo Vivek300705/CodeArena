@@ -11,11 +11,18 @@ import {
   refreshTokenSchema,
 } from "../validators/auth.validators.js";
 
+import { forgotPassword } from "../controllers/forgotPassword.js";
+import { resetPassword } from "../controllers/resetPassword.js";
+
 const router = express.Router();
 
 router.post("/register", validate(registerSchema), registerUser);
 
 router.post("/login", validate(loginSchema), loginUser);
+
+router.post("/forgotpassword", forgotPassword);
+
+router.put("/resetpassword/:token", resetPassword);
 
 router.post("/refresh", validate(refreshTokenSchema), refreshAccessToken);
 
