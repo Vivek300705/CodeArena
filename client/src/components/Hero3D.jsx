@@ -147,10 +147,6 @@ export default function Hero3D() {
       {/* Neural network canvas */}
       <NeuralCanvas />
 
-      {/* Scanline texture */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px)', zIndex: 2 }} />
-
       {/* Vignette: darkens edges so content in center is readable */}
       <div className="absolute inset-0 pointer-events-none" style={{
         zIndex: 3,

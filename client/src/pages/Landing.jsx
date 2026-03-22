@@ -293,8 +293,6 @@ export default function Landing() {
       ══════════════════════════════════════════ */}
       <section className="relative z-10 py-28"
         style={{ background: 'linear-gradient(to bottom, rgba(2,3,12,0.97) 0%, rgba(4,4,18,0.99) 100%)' }}>
-        <div className="absolute inset-0 pointer-events-none opacity-25"
-          style={{ backgroundImage: 'radial-gradient(rgba(0,200,240,0.07) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
         <div className="max-w-7xl mx-auto px-6 relative">
           <motion.div
@@ -458,7 +456,6 @@ export default function Landing() {
       <section className="relative z-10 py-36 overflow-hidden border-t border-white/4"
         style={{ background: 'rgba(2,3,12,0.99)' }}>
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 cyber-grid opacity-35" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] blur-[100px]"
             style={{ background: 'radial-gradient(ellipse, rgba(0,229,247,0.1) 0%, rgba(96,165,250,0.06) 50%, transparent)' }} />
         </div>
