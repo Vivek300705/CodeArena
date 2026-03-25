@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -6,17 +6,42 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { authService } from '../services/authService.js';
-import { Loader2, Mail, Lock, Target, ArrowRight, AlertCircle } from 'lucide-react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Github } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+function IcosahedronMesh() {
+  const meshRef = useRef();
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.1;
+      meshRef.current.rotation.x += delta * 0.05;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={[0, 0, 0]} scale={2.5}>
+      <icosahedronGeometry args={[1, 0]} />
+      <meshBasicMaterial 
+        color="#f97316" 
+        wireframe={true} 
+        transparent={true} 
+        opacity={0.15} 
+      />
+    </mesh>
+  );
+}
+
 export default function Login() {
-  useDocumentTitle('Log In');
+  useDocumentTitle('Log In | CodeArena');
   const [error, setError] = useState('');
+  const [shake, setShake] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
 
@@ -27,155 +52,169 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {
       setError('');
+      setShake(false);
       const response = await authService.login(data);
       login(response.user, response.accessToken);
       navigate('/dashboard');
     } catch (err) {
+      setShake(true);
+      setTimeout(() => setShake(false), 300); // 300ms shake duration
+      
       if (!err.response) {
         login({ id: 1, name: 'Test User', email: data.email }, 'mock-jwt-token');
         navigate('/dashboard');
         return;
       }
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || 'Authentication failed. Access denied.');
     }
   };
 
   return (
-    <div className="min-h-screen flex relative overflow-hidden">
-      {/* ── Left Panel: decorative ── */}
-      <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden">
-        {/* Ambient glows */}
-        <div className="absolute inset-0 bg-[#020209]" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[120px]"
-          style={{ background: 'radial-gradient(ellipse, rgba(0,245,255,0.15) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full blur-[80px]"
-          style={{ background: 'rgba(139,92,246,0.1)' }} />
-        {/* Grid */}
-        <div className="absolute inset-0 cyber-grid opacity-40" />
-        {/* Content */}
-        <div className="relative z-10 text-center px-12">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <Target className="w-10 h-10 text-neon-cyan" style={{ filter: 'drop-shadow(0 0 10px rgba(0,245,255,0.6))' }} />
-            <span className="text-3xl font-black font-display text-white">Code<span className="text-neon-cyan">Arena</span></span>
-          </div>
-          <h2 className="text-4xl font-black font-display text-white mb-4 leading-tight">
-            Your Code.<br />
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #00f5ff, #8b5cf6)' }}>
-              Your Legacy.
-            </span>
-          </h2>
-          <p className="text-zinc-500 text-lg max-w-xs mx-auto">Battle algorithms. Climb the global leaderboard. Prove your mastery.</p>
+    <div className="min-h-screen flex bg-[#020202] font-ui overflow-hidden text-[var(--forge-white)]">
+      
+      {/* ── LEFT VISUAL PANEL ── */}
+      <div className="hidden lg:flex flex-col relative w-[55%] border-r border-[var(--forge-ember)] relative shadow-[1px_0_12px_var(--forge-glow)]">
+        
+        {/* Subtle Watermark */}
+        <div className="absolute inset-0 flex items-center justify-center -translate-x-12 opacity-5 pointer-events-none">
+          <span className="font-display font-black text-[30vw] tracking-tighter leading-none">&lt;/&gt;</span>
+        </div>
 
-          {/* Decorative stats */}
-          <div className="flex justify-center gap-8 mt-10">
-            {[['2.4M+', 'Submissions'], ['120K', 'Challengers'], ['1.5K+', 'Problems']].map(([v, l]) => (
-              <div key={l} className="text-center">
-                <div className="text-xl font-black text-neon-cyan font-display">{v}</div>
-                <div className="text-xs text-zinc-600 uppercase font-bold tracking-widest">{l}</div>
-              </div>
-            ))}
-          </div>
+        {/* 3D Wireframe Icosahedron */}
+        <div className="absolute inset-0 z-0">
+          <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+            <ambientLight intensity={0.5} />
+            <IcosahedronMesh />
+          </Canvas>
+        </div>
+
+        {/* Quote at bottom */}
+        <div className="mt-auto absolute bottom-12 left-12 z-10 w-full">
+          <p className="text-[var(--forge-dim)] font-ui italic text-sm tracking-wide">
+            "Every legend was once a beginner."
+          </p>
         </div>
       </div>
 
-      {/* ── Right Panel: form ── */}
-      <div className="flex-1 lg:max-w-md flex items-center justify-center px-6 py-12 relative"
-        style={{ background: 'rgba(5,5,12,0.97)', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
-        {/* Top glow */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent" />
-
+      {/* ── RIGHT FORM PANEL ── */}
+      <div className="flex-1 w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-16 lg:px-20 relative z-10" style={{ background: '#0F1317', borderLeft: '1px solid #1E2832' }}>
+        
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          className="w-full max-w-sm"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="w-full max-w-md mx-auto"
         >
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <Target className="w-6 h-6 text-neon-cyan" />
-            <span className="font-black font-display text-white">Code<span className="text-neon-cyan">Arena</span></span>
+          {/* Logo Heading */}
+          <div className="mb-2 flex items-baseline gap-2">
+             <span className="text-[var(--forge-ember)] font-black text-2xl font-display tracking-tight">&lt;/&gt;</span>
+             <span className="text-[var(--forge-white)] font-black text-2xl font-display tracking-widest uppercase">CODEARENA</span>
           </div>
+          <h1 className="text-2xl font-display font-black uppercase tracking-widest text-[var(--forge-white)] mb-1">Welcome Back</h1>
+          <p className="text-[var(--forge-steel)] text-sm font-ui mb-10 tracking-wider">Enter the arena.</p>
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-black font-display text-white mb-2">Welcome back</h1>
-            <p className="text-zinc-500">Enter the arena — log in to continue.</p>
-          </div>
-
+          {/* Error Message */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-5 flex items-center gap-2 p-3.5 rounded-xl bg-red-500/8 border border-red-500/20 text-red-400 text-sm"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" /> {error}
-            </motion.div>
+            <div className="mb-6 p-3 bg-[#1A1010] border-l-2 border-[var(--forge-red)] text-[var(--forge-red)] text-xs font-mono uppercase tracking-widest">
+               [SYS_ERR] {error}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
-                <input
-                  {...register('email')}
-                  type="email"
-                  className="input-glow w-full pl-10"
-                  placeholder="you@example.com"
-                />
-              </div>
-              {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>}
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className={shake ? 'form-error' : ''}>
+            
+            {/* Email Field with explicit label */}
+            <div style={{ position: 'relative', marginBottom: '28px' }}>
+              <label style={{
+                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
+                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
+                color: '#FF6B35', textTransform: 'uppercase'
+              }}>
+                EMAIL
+              </label>
+              <input
+                {...register('email')}
+                type="text"
+                className="forge-input"
+                placeholder="> your@example.com"
+              />
+              {errors.email && <p className="mt-2 text-[10px] text-[var(--forge-red)] font-mono uppercase tracking-wider">✗ {errors.email.message}</p>}
             </div>
 
-            {/* Password */}
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Password</label>
-                <Link to="#" className="text-xs text-neon-cyan/70 hover:text-neon-cyan transition-colors">Forgot?</Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
-                <input
-                  type="password"
-                  {...register('password')}
-                  className="input-glow w-full pl-10"
-                  placeholder="••••••••"
-                />
-                {errors.password && (
-                  <p className="text-red-400 text-xs mt-1 absolute -bottom-5 left-0">{errors.password.message}</p>
-                )}
-              </div>
+            {/* Password Field with exact toggle */}
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <label style={{
+                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
+                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
+                color: '#FF6B35', textTransform: 'uppercase'
+              }}>
+                PASSWORD
+              </label>
+              <input
+                {...register('password')}
+                type={showPassword ? 'text' : 'password'}
+                className="forge-input"
+                placeholder="> ••••••••"
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: showPassword ? '#FF6B35' : '#4A6070',
+                  fontSize: '16px', cursor: 'pointer', padding: '0', lineHeight: 1, transition: 'color 0.2s'
+                }}
+                tabIndex="-1"
+              >
+                {showPassword ? '◉' : '◎'}
+              </button>
+              {errors.password && <p className="mt-2 text-[10px] text-[var(--forge-red)] font-mono uppercase tracking-wider">✗ {errors.password.message}</p>}
             </div>
 
-            <div className="flex items-center justify-end mb-8 mt-2">
-              <Link to="/forgot-password" className="text-xs font-bold text-zinc-400 hover:text-neon-cyan transition-colors">
-                Forgot Password?
-              </Link>
+            <div className="flex justify-end mb-6">
+               <Link to="/forgot-password" className="text-xs font-mono text-[var(--forge-steel)] uppercase tracking-widest hover:text-[var(--forge-ember)] transition-colors">
+                 Forgot Password?
+               </Link>
             </div>
 
-            {/* Submit */}
-            <motion.button
+            {/* Submit Button */}
+            <button
               type="submit"
               disabled={isSubmitting}
-              whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(0,245,255,0.25)' }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-shimmer w-full py-3.5 rounded-xl font-bold text-black flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg, #00e5f7, #3b82f6)', boxShadow: '0 0 20px rgba(0,200,230,0.2)' }}
+              className="btn-submit"
             >
-              {isSubmitting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>Log In <ArrowRight className="w-4 h-4" /></>
-              )}
-            </motion.button>
+              {isSubmitting ? 'FORGING...' : '⚡ ENTER THE ARENA'}
+            </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-zinc-600">
-            New to CodeArena?{' '}
-            <Link to="/register" className="text-neon-cyan font-bold hover:underline transition-colors">
-              Create an account →
-            </Link>
-          </p>
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '28px 0' }}>
+            <div style={{ flex: 1, height: '1px', background: '#1E2832' }} />
+            <span style={{ fontFamily: "'Exo 2', sans-serif", fontSize: '10px', letterSpacing: '0.2em', color: '#4A6070', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+              OR CONTINUE WITH
+            </span>
+            <div style={{ flex: 1, height: '1px', background: '#1E2832' }} />
+          </div>
+
+          {/* Oauth */}
+          <div className="flex gap-4">
+            <button className="oauth-btn">
+               <Github className="w-4 h-4" /> Github
+            </button>
+            <button className="oauth-btn">
+               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+               </svg>
+               Google
+            </button>
+          </div>
+
+          <div className="mt-10 text-center text-xs font-mono uppercase tracking-widest text-[var(--forge-dim)]">
+             Don't have an account?{' '}
+             <Link to="/register" className="text-[var(--forge-ember)] hover:text-[#ff8a3d] transition-colors drop-shadow-[0_0_5px_rgba(249,115,22,0.3)]">
+               [ Forge One → ]
+             </Link>
+          </div>
         </motion.div>
       </div>
     </div>

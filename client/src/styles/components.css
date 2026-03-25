@@ -96,3 +96,107 @@
     font-weight: 700;
     font-family: var(--font-mono);
   }
+
+  /* Input styling */
+  .forge-input {
+    background: #080A0C !important;        
+    border: 1px solid #1E2832 !important;  
+    border-bottom: 2px solid #FF6B35 !important; 
+    color: #E8EFF5 !important;             
+    font-family: var(--font-mono) !important;
+    font-size: 14px;
+    padding: 14px 16px;
+    border-radius: 2px;
+    width: 100%;
+    outline: none !important;
+    transition: all 0.25s ease;
+    caret-color: #FF6B35;                  
+  }
+
+  .forge-input::placeholder {
+    color: #4A6070 !important;             
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+
+  .forge-input:focus {
+    background: #0F1317 !important;
+    border-bottom-color: #FF3D00 !important;
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.12);
+  }
+
+  /* OAuth Buttons */
+  .oauth-btn {
+    background: #080A0C !important;
+    border: 1px solid #1E2832 !important;
+    color: #8FAABF !important;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .oauth-btn:hover {
+    border-color: #FF6B35 !important;
+    color: #FF6B35 !important;
+    box-shadow: 0 0 16px rgba(255, 107, 53, 0.15);
+  }
+
+  /* Submit Button */
+  .btn-submit {
+    position: relative;
+    overflow: hidden;
+    background: #FF6B35;
+    color: #000;
+    font-family: var(--font-ui);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: none;
+    width: 100%;
+    padding: 15px;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    cursor: pointer;
+    margin: 8px 0;
+    transition: background 0.2s;
+  }
+
+  .btn-submit::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transition: left 0.4s ease;
+  }
+
+  .btn-submit:hover { background: #FF3D00; }
+  .btn-submit:hover::after { left: 160%; }
+
+  /* Shared Animations */
+  @keyframes forge-shake {
+    0%, 100% { transform: translateX(0); }
+    15%       { transform: translateX(-8px); }
+    30%       { transform: translateX(8px); }
+    45%       { transform: translateX(-6px); }
+    60%       { transform: translateX(6px); }
+    75%       { transform: translateX(-3px); }
+    90%       { transform: translateX(3px); }
+  }
+
+  .form-error {
+    animation: forge-shake 0.45s ease;
+  }
