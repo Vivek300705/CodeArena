@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/useAuthStore.js';
 import { authService } from '../services/authService.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { TypewriterSubtitle } from '../components/TypewriterSubtitle.jsx';
 
 // Reusing same icosahedron logic as Login
 function IcosahedronMesh() {
@@ -165,6 +166,82 @@ export default function Register() {
             <IcosahedronMesh />
           </Canvas>
         </div>
+
+        {/* Center Logo Block */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 2,
+          pointerEvents: 'none',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          {/* Big </> symbol */}
+          <div style={{
+            fontFamily: "'Orbitron', monospace",
+            fontWeight: '900',
+            fontSize: 'clamp(48px, 7vw, 80px)',
+            color: '#FF6B35',
+            lineHeight: 1,
+            textShadow: `
+              0 0 20px rgba(255,107,53,0.8),
+              0 0 50px rgba(255,107,53,0.4),
+              0 0 100px rgba(255,107,53,0.15)
+            `,
+            animation: 'ember-pulse 2.5s ease-in-out infinite'
+          }}>
+            {'</>'}
+          </div>
+
+          {/* CODEARENA text */}
+          <div style={{
+            fontFamily: "'Orbitron', monospace",
+            fontWeight: '900',
+            fontSize: 'clamp(28px, 4vw, 52px)',
+            color: '#E8EFF5',
+            letterSpacing: '0.2em',
+            lineHeight: 1,
+            textTransform: 'uppercase',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            CODEARENA
+
+            {/* Shimmer sweep every 4s */}
+            <span style={{
+              position: 'absolute',
+              top: 0, left: '-100%',
+              width: '50%',
+              height: '100%',
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+              animation: 'logo-shimmer 4s ease-in-out infinite'
+            }} />
+          </div>
+
+          {/* Thin ember divider line */}
+          <div style={{
+            width: '60px',
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent, #FF6B35, transparent)',
+            borderRadius: '1px'
+          }} />
+
+          {/* Tagline */}
+          <div style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: 'clamp(10px, 1.2vw, 13px)',
+            color: '#4A6070',
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase'
+          }}>
+            FORGE · COMPETE · CONQUER
+          </div>
+        </div>
         <div className="mt-auto absolute bottom-12 left-12 z-10 w-full">
           <p className="text-[var(--forge-dim)] font-ui italic text-sm tracking-wide">
             "The arena awaits your first move."
@@ -186,8 +263,8 @@ export default function Register() {
              <span className="text-[var(--forge-ember)] font-black text-2xl font-display tracking-tight">&lt;/&gt;</span>
              <span className="text-[var(--forge-white)] font-black text-2xl font-display tracking-widest uppercase">CODEARENA</span>
           </div>
-          <h1 className="text-2xl font-display font-black uppercase tracking-widest text-[var(--forge-white)] mb-1">Join the Arena</h1>
-          <p className="text-[var(--forge-steel)] text-sm font-ui mb-8 tracking-wider">Create your forge identity.</p>
+          <h1 className="forge-heading" data-text="JOIN THE ARENA">JOIN THE ARENA</h1>
+          <TypewriterSubtitle text="Create your forge identity." />
 
           {/* Error Message */}
           {error && (
@@ -202,11 +279,14 @@ export default function Register() {
             {/* Username Field */}
             <div style={{ position: 'relative', marginBottom: '28px' }}>
               <label style={{
-                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
-                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
-                color: '#FF6B35', textTransform: 'uppercase'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
               }}>
-                USERNAME
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>⚔</span> USERNAME
               </label>
               <input
                 {...register('username')}
@@ -229,11 +309,14 @@ export default function Register() {
             {/* Email Field */}
             <div style={{ position: 'relative', marginBottom: '28px' }}>
               <label style={{
-                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
-                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
-                color: '#FF6B35', textTransform: 'uppercase'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
               }}>
-                EMAIL
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>◈</span> EMAIL
               </label>
               <input
                 {...register('email')}
@@ -247,11 +330,14 @@ export default function Register() {
             {/* Password Field */}
             <div style={{ position: 'relative', marginBottom: passwordVal.length > 0 ? '12px' : '28px' }}>
               <label style={{
-                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
-                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
-                color: '#FF6B35', textTransform: 'uppercase'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
               }}>
-                PASSWORD
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>⬡</span> PASSWORD
               </label>
               <input
                 {...register('password')}
@@ -292,11 +378,14 @@ export default function Register() {
             {/* Confirm Password Field */}
             <div style={{ position: 'relative', marginBottom: '28px' }}>
               <label style={{
-                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
-                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
-                color: '#FF6B35', textTransform: 'uppercase'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
               }}>
-                CONFIRM PASSWORD
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>⬡</span> CONFIRM PASSWORD
               </label>
               <input
                 {...register('confirmPassword')}
@@ -309,14 +398,24 @@ export default function Register() {
 
             {/* Checkbox */}
             <div className="pt-2">
-              <label className="flex items-center gap-3 cursor-pointer group w-fit">
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                fontFamily: "'Exo 2', sans-serif", fontSize: '12px',
+                letterSpacing: '0.08em', color: '#8FAABF',
+                cursor: 'pointer', userSelect: 'none'
+              }}>
                 <input type="checkbox" {...register('terms')} className="sr-only" />
-                <div className={`w-[14px] h-[14px] flex items-center justify-center transition-colors ${termsChecked ? 'bg-[var(--forge-ember)]' : 'border border-[var(--forge-border)] group-hover:border-[var(--forge-steel)]'}`}>
-                  {termsChecked && <svg className="w-2.5 h-2.5 text-[#000]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                <div style={{
+                  width: '16px', height: '16px',
+                  border: `1px solid ${termsChecked ? '#FF6B35' : '#1E2832'}`,
+                  background: termsChecked ? 'rgba(255,107,53,0.15)' : 'transparent',
+                  borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, transition: 'all 0.2s',
+                  boxShadow: termsChecked ? '0 0 8px rgba(255,107,53,0.3)' : 'none'
+                }}>
+                  {termsChecked && <span style={{ color: '#FF6B35', fontSize: '10px', fontWeight: '700', lineHeight: 1 }}>✓</span>}
                 </div>
-                <span className={`text-[12px] font-ui transition-colors ${termsChecked ? 'text-[var(--forge-white)]' : 'text-[var(--forge-steel)] group-hover:text-[var(--forge-white)]'}`}>
-                  I accept the Arena Code of Conduct
-                </span>
+                <span>I accept the <span style={{ color: '#FF6B35', textDecoration: 'underline', textDecorationColor: 'rgba(255,107,53,0.3)' }}>Arena Code of Conduct</span></span>
               </label>
               {errors.terms && <p className="mt-2 text-[10px] text-[#FF4757] font-mono uppercase tracking-wider">✗ {errors.terms.message}</p>}
             </div>
@@ -331,12 +430,34 @@ export default function Register() {
             </button>
           </form>
 
-          <div className="mt-10 text-center text-xs font-mono uppercase tracking-widest text-[var(--forge-dim)]">
-             Already forged?{' '}
-             <Link to="/login" className="text-[var(--forge-ember)] hover:text-[#ff8a3d] transition-colors drop-shadow-[0_0_5px_rgba(249,115,22,0.3)]">
-               [ Enter Here → ]
-             </Link>
-          </div>
+          <p style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '11px',
+            letterSpacing: '0.15em',
+            color: '#4A6070',
+            textAlign: 'center',
+            marginTop: '20px'
+          }}>
+            ALREADY FORGED?{' '}
+            <Link to="/login" style={{
+              color: '#FF6B35',
+              textDecoration: 'none',
+              fontWeight: '700',
+              letterSpacing: '0.12em',
+              position: 'relative',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              e.target.style.color = '#FF3D00';
+              e.target.style.textShadow = '0 0 12px rgba(255,107,53,0.6)';
+            }}
+            onMouseLeave={e => {
+              e.target.style.color = '#FF6B35';
+              e.target.style.textShadow = 'none';
+            }}>
+              [ ENTER HERE → ]
+            </Link>
+          </p>
         </motion.div>
       </div>
     </div>

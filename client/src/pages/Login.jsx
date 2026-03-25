@@ -9,6 +9,7 @@ import { authService } from '../services/authService.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Github } from 'lucide-react';
+import { TypewriterSubtitle } from '../components/TypewriterSubtitle.jsx';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -88,6 +89,82 @@ export default function Login() {
           </Canvas>
         </div>
 
+        {/* Center Logo Block */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 2,
+          pointerEvents: 'none',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          {/* Big </> symbol */}
+          <div style={{
+            fontFamily: "'Orbitron', monospace",
+            fontWeight: '900',
+            fontSize: 'clamp(48px, 7vw, 80px)',
+            color: '#FF6B35',
+            lineHeight: 1,
+            textShadow: `
+              0 0 20px rgba(255,107,53,0.8),
+              0 0 50px rgba(255,107,53,0.4),
+              0 0 100px rgba(255,107,53,0.15)
+            `,
+            animation: 'ember-pulse 2.5s ease-in-out infinite'
+          }}>
+            {'</>'}
+          </div>
+
+          {/* CODEARENA text */}
+          <div style={{
+            fontFamily: "'Orbitron', monospace",
+            fontWeight: '900',
+            fontSize: 'clamp(28px, 4vw, 52px)',
+            color: '#E8EFF5',
+            letterSpacing: '0.2em',
+            lineHeight: 1,
+            textTransform: 'uppercase',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            CODEARENA
+
+            {/* Shimmer sweep every 4s */}
+            <span style={{
+              position: 'absolute',
+              top: 0, left: '-100%',
+              width: '50%',
+              height: '100%',
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+              animation: 'logo-shimmer 4s ease-in-out infinite'
+            }} />
+          </div>
+
+          {/* Thin ember divider line */}
+          <div style={{
+            width: '60px',
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent, #FF6B35, transparent)',
+            borderRadius: '1px'
+          }} />
+
+          {/* Tagline */}
+          <div style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: 'clamp(10px, 1.2vw, 13px)',
+            color: '#4A6070',
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase'
+          }}>
+            FORGE · COMPETE · CONQUER
+          </div>
+        </div>
+
         {/* Quote at bottom */}
         <div className="mt-auto absolute bottom-12 left-12 z-10 w-full">
           <p className="text-[var(--forge-dim)] font-ui italic text-sm tracking-wide">
@@ -110,8 +187,8 @@ export default function Login() {
              <span className="text-[var(--forge-ember)] font-black text-2xl font-display tracking-tight">&lt;/&gt;</span>
              <span className="text-[var(--forge-white)] font-black text-2xl font-display tracking-widest uppercase">CODEARENA</span>
           </div>
-          <h1 className="text-2xl font-display font-black uppercase tracking-widest text-[var(--forge-white)] mb-1">Welcome Back</h1>
-          <p className="text-[var(--forge-steel)] text-sm font-ui mb-10 tracking-wider">Enter the arena.</p>
+          <h1 className="forge-heading" data-text="WELCOME BACK">WELCOME BACK</h1>
+          <TypewriterSubtitle text="Enter the arena." />
 
           {/* Error Message */}
           {error && (
@@ -126,11 +203,14 @@ export default function Login() {
             {/* Email Field with explicit label */}
             <div style={{ position: 'relative', marginBottom: '28px' }}>
               <label style={{
-                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
-                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
-                color: '#FF6B35', textTransform: 'uppercase'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
               }}>
-                EMAIL
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>◈</span> EMAIL
               </label>
               <input
                 {...register('email')}
@@ -144,11 +224,14 @@ export default function Login() {
             {/* Password Field with exact toggle */}
             <div style={{ position: 'relative', marginBottom: '12px' }}>
               <label style={{
-                position: 'absolute', top: '-20px', left: '0', fontSize: '11px',
-                fontFamily: "'Exo 2', sans-serif", fontWeight: '700', letterSpacing: '0.15em',
-                color: '#FF6B35', textTransform: 'uppercase'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
               }}>
-                PASSWORD
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>⬡</span> PASSWORD
               </label>
               <input
                 {...register('password')}
@@ -209,12 +292,34 @@ export default function Login() {
             </button>
           </div>
 
-          <div className="mt-10 text-center text-xs font-mono uppercase tracking-widest text-[var(--forge-dim)]">
-             Don't have an account?{' '}
-             <Link to="/register" className="text-[var(--forge-ember)] hover:text-[#ff8a3d] transition-colors drop-shadow-[0_0_5px_rgba(249,115,22,0.3)]">
-               [ Forge One → ]
-             </Link>
-          </div>
+          <p style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '11px',
+            letterSpacing: '0.15em',
+            color: '#4A6070',
+            textAlign: 'center',
+            marginTop: '20px'
+          }}>
+            NEW TO CODEARENA?{' '}
+            <Link to="/register" style={{
+              color: '#FF6B35',
+              textDecoration: 'none',
+              fontWeight: '700',
+              letterSpacing: '0.12em',
+              position: 'relative',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              e.target.style.color = '#FF3D00';
+              e.target.style.textShadow = '0 0 12px rgba(255,107,53,0.6)';
+            }}
+            onMouseLeave={e => {
+              e.target.style.color = '#FF6B35';
+              e.target.style.textShadow = 'none';
+            }}>
+              [ FORGE ONE → ]
+            </Link>
+          </p>
         </motion.div>
       </div>
     </div>

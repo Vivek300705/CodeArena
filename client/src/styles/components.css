@@ -200,3 +200,75 @@
   .form-error {
     animation: forge-shake 0.45s ease;
   }
+
+  /* Glitch Heading */
+  .forge-heading {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 900;
+    color: #E8EFF5;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    position: relative;
+    display: inline-block;
+    margin: 4px 0 8px;
+  }
+
+  .forge-heading::before,
+  .forge-heading::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .forge-heading::before {
+    color: #FF6B35;
+    animation: glitch-1 5s infinite;
+    clip-path: polygon(0 0, 100% 0, 100% 40%, 0 40%);
+  }
+
+  .forge-heading::after {
+    color: #00D97E;
+    animation: glitch-2 5s infinite;
+    clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+  }
+
+  @keyframes glitch-1 {
+    0%, 92%, 100% { transform: translate(0); opacity: 0; }
+    93%           { transform: translate(-3px, 1px); opacity: 0.7; }
+    95%           { transform: translate(3px, -1px); opacity: 0.7; }
+    97%           { transform: translate(-2px, 0); opacity: 0.5; }
+  }
+
+  @keyframes glitch-2 {
+    0%, 92%, 100% { transform: translate(0); opacity: 0; }
+    94%           { transform: translate(3px, 1px); opacity: 0.5; }
+    96%           { transform: translate(-3px, -1px); opacity: 0.5; }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  @keyframes ember-pulse {
+    0%, 100% {
+      text-shadow:
+        0 0 20px rgba(255,107,53,0.8),
+        0 0 50px rgba(255,107,53,0.4),
+        0 0 100px rgba(255,107,53,0.15);
+    }
+    50% {
+      text-shadow:
+        0 0 30px rgba(255,107,53,1),
+        0 0 70px rgba(255,107,53,0.6),
+        0 0 130px rgba(255,107,53,0.25);
+    }
+  }
+
+  @keyframes logo-shimmer {
+    0%        { left: -100%; }
+    30%, 100% { left: 160%;  }
+  }
