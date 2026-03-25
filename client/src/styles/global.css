@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forge-bg:       #080A0C;
+  --forge-surface:  #0F1317;
+  --forge-panel:    #141A1F;
+  --forge-border:   #1E2832;
+  --forge-ember:    #FF6B35;
+  --forge-coal:     #CC4A1A;
+  --forge-lava:     #FF3D00;
+  --forge-gold:     #FFB800;
+  --forge-steel:    #8FAABF;
+  --forge-white:    #E8EFF5;
+  --forge-dim:      #4A6070;
+  --forge-green:    #00D97E;
+  --forge-red:      #FF4757;
+  --forge-yellow:   #FFD32A;
+  --forge-glow:     rgba(255, 107, 53, 0.15);
+}
+
+@layer base {
+  body {
+    background-color: var(--forge-bg);
+    color: var(--forge-white);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    cursor: crosshair; /* Will enhance with custom JS cursor later */
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--forge-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--forge-ember);
+    border-radius: 2px;
+  }
+  
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

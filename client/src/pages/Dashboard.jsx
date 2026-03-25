@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/useAuthStore.js';
-import { Code2, Target, CheckCircle, Clock, Loader2, Zap, TrendingUp, Activity, ChevronRight, Swords, Trophy, BarChart2 } from 'lucide-react';
+import { Code2, Target, CheckCircle, Clock, Loader2, Zap, Activity, ChevronRight, Swords, Trophy, BarChart2, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getSubmissions } from '../services/problemService.js';
 import { getMyRank } from '../services/leaderboardService.js';
-import GlowCard from '../components/ui/GlowCard.jsx';
-import { staggerContainer, fadeUp, fadeLeft, fadeRight } from '../animations/variants.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import ForgeButton from '../components/ForgeButton.jsx';
 
 const LANG_DISPLAY = { python: 'Python', javascript: 'JS', node: 'Node.js', cpp: 'C++', c: 'C', java: 'Java', go: 'Go', rust: 'Rust' };
 
@@ -19,26 +18,26 @@ function timeAgo(d) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function ProgressRing({ value, max, size = 100, strokeWidth = 7, color = '#00f5ff' }) {
+function ProgressRing({ value, max, size = 100, strokeWidth = 7, color = '#f97316' }) {
   const r = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * r;
   const pct = max > 0 ? Math.min(value / max, 1) : 0;
   const offset = circ * (1 - pct);
   return (
     <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={strokeWidth} />
       <circle
         cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={strokeWidth}
         strokeDasharray={circ} strokeDashoffset={offset}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 1s ease', filter: `drop-shadow(0 0 6px ${color}80)` }}
+        strokeLinecap="butt"
+        style={{ transition: 'stroke-dashoffset 1s ease', filter: `drop-shadow(0 0 5px ${color}80)` }}
       />
     </svg>
   );
 }
 
 export default function Dashboard() {
-  useDocumentTitle('Dashboard');
+  useDocumentTitle('Command Center | CodeArena');
   const user = useAuthStore((state) => state.user);
   const [submissions, setSubmissions] = useState([]);
   const [rankData, setRankData] = useState(null);
@@ -56,158 +55,174 @@ export default function Dashboard() {
   const accepted = submissions.filter((s) => s.verdict === 'Accepted');
   const uniqueSolved = new Set(accepted.map((s) => s.problemId?._id || s.problemId)).size;
   const recent = submissions.slice(0, 5);
-  const username = user?.name || user?.username || 'Challenger';
+  const username = user?.name || user?.username || 'OP_UNKNOWN';
   const initial = username[0].toUpperCase();
 
   const stats = [
-    { label: 'Problems Solved', value: uniqueSolved, icon: <CheckCircle className="w-5 h-5" />, color: 'green', glow: 'rgba(34,197,94,0.12)', textColor: 'text-green-400', border: 'border-green-500/15', ring: '#22c55e' },
-    { label: 'Global Rank', value: rankData?.rank ? `#${rankData.rank}` : 'Unranked', icon: <Target className="w-5 h-5" />, color: 'cyan', glow: 'rgba(0,245,255,0.1)', textColor: 'text-neon-cyan', border: 'border-neon-cyan/15', ring: '#00f5ff' },
-    { label: 'Total Submissions', value: submissions.length, icon: <Activity className="w-5 h-5" />, color: 'purple', glow: 'rgba(139,92,246,0.1)', textColor: 'text-purple-400', border: 'border-plasma/15', ring: '#8b5cf6' },
+    { label: 'Targets Neutralized', value: uniqueSolved, icon: <CheckCircle className="w-5 h-5" />, color: 'var(--forge-green)', bg: 'bg-[#0f1712]' },
+    { label: 'Global Ranking', value: rankData?.rank ? `#${rankData.rank}` : 'UNRANKED', icon: <Target className="w-5 h-5" />, color: 'var(--forge-ember)', bg: 'bg-[#140b08]' },
+    { label: 'Total Deployments', value: submissions.length, icon: <Activity className="w-5 h-5" />, color: 'var(--forge-steel)', bg: 'bg-[#11161B]' },
   ];
 
   const quickLinks = [
-    { title: 'Duel Mode', desc: 'Real-time competitive coding', to: '/duel', icon: <Swords className="w-4 h-4" />, color: 'ember' },
-    { title: 'Browse Problems', desc: 'Find your next challenge', to: '/problems', icon: <Code2 className="w-4 h-4" />, color: 'cyan' },
-    { title: 'Leaderboard', desc: 'See where you rank globally', to: '/leaderboard', icon: <Trophy className="w-4 h-4" />, color: 'purple' },
-    { title: 'Submission History', desc: 'Review all your attempts', to: '/history', icon: <BarChart2 className="w-4 h-4" />, color: 'green' },
+    { title: 'Arena Combat', desc: 'Secure real-time match', to: '/duel', icon: <Swords className="w-4 h-4" /> },
+    { title: 'Target Solutions', desc: 'Engage algorithms', to: '/problems', icon: <Target className="w-4 h-4" /> },
+    { title: 'Global Rankings', desc: 'Assess operative standing', to: '/leaderboard', icon: <Trophy className="w-4 h-4" /> },
+    { title: 'Mission Logs', desc: 'Review executed payloads', to: '/history', icon: <Code2 className="w-4 h-4" /> },
   ];
 
-  const quickLinkColors = {
-    ember: { bg: 'bg-ember/10', text: 'text-ember', border: 'border-ember/15', hover: 'hover:border-ember/40 hover:bg-ember/5' },
-    cyan: { bg: 'bg-neon-cyan/10', text: 'text-neon-cyan', border: 'border-neon-cyan/15', hover: 'hover:border-neon-cyan/40 hover:bg-neon-cyan/5' },
-    purple: { bg: 'bg-plasma/10', text: 'text-purple-400', border: 'border-plasma/15', hover: 'hover:border-plasma/40 hover:bg-plasma/5' },
-    green: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/15', hover: 'hover:border-green-500/40 hover:bg-green-500/5' },
-  };
-
   return (
-    <div className="container mx-auto px-6 py-12 max-w-7xl">
-      {/* ── Header ── */}
+    <div className="container mx-auto px-4 sm:px-6 py-12 max-w-6xl font-ui">
+      
+      {/* ── HEADER ── */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="mb-10 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="mb-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-[var(--forge-panel)] border border-[var(--forge-border)] p-6 md:p-8 relative overflow-hidden"
       >
+        <div className="absolute top-0 right-0 w-64 h-full bg-[var(--forge-ember)] blur-[100px] opacity-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-2 bg-[var(--forge-ember)] shadow-[0_0_10px_var(--forge-glow)]" />
+
         <div className="relative">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black font-display"
-            style={{ background: 'linear-gradient(135deg, rgba(0,245,255,0.2), rgba(59,130,246,0.2))', border: '1px solid rgba(0,245,255,0.25)', color: '#00f5ff', boxShadow: '0 0 20px rgba(0,245,255,0.15)' }}>
+          <div className="w-16 h-16 flex items-center justify-center text-3xl font-black font-display bg-[#140b08] border border-[var(--forge-ember)] text-[var(--forge-ember)] shadow-[inset_0_0_15px_rgba(249,115,22,0.1)]">
             {initial}
           </div>
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[var(--forge-green)] border border-[var(--forge-bg)] shadow-[0_0_8px_var(--forge-green)] animate-pulse" />
         </div>
-        <div>
-          <h1 className="text-3xl md:text-4xl font-black font-display">
-            Welcome back,{' '}
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #00f5ff, #3b82f6)' }}>
-              {username}
-            </span>
+        
+        <div className="relative z-10 flex-1">
+          <div className="text-[10px] uppercase font-black tracking-widest text-[var(--forge-dim)] mb-1">Authenticated Operative</div>
+          <h1 className="text-3xl md:text-5xl font-black font-display text-[var(--forge-white)] uppercase tracking-wider flex items-center gap-3">
+            {username} 
+            <Shield className="w-6 h-6 text-[var(--forge-ember)] opacity-50" />
           </h1>
-          <p className="text-zinc-500 mt-1">Here's your performance overview.</p>
+          <p className="text-[var(--forge-steel)] mt-2 font-mono text-sm max-w-lg">
+            Command center initialized. Telemetry routing active. Awaiting your next payload directive.
+          </p>
+        </div>
+        
+        <div className="hidden md:block relative z-10 text-right shrink-0 pr-8">
+           <div className="text-[10px] uppercase font-black tracking-widest text-[var(--forge-dim)] mb-1 border-b border-[var(--forge-border)] pb-1">System Status</div>
+           <div className="text-[var(--forge-green)] font-mono text-sm uppercase font-bold tracking-widest mt-2 flex items-center gap-2">
+             <span className="w-1.5 h-1.5 bg-[var(--forge-green)] drop-shadow-[0_0_5px_var(--forge-green)]" /> ONLINE
+           </div>
         </div>
       </motion.div>
 
-      {/* ── Stat Cards ── */}
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
-      >
+      {/* ── STAT PANELS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
         {stats.map((stat, i) => (
-          <motion.div key={i} variants={fadeUp}>
-            <GlowCard variant={stat.color === 'green' ? 'green' : stat.color === 'cyan' ? 'cyan' : 'purple'} className={`border ${stat.border} p-6`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-2.5 rounded-xl ${stat.color === 'green' ? 'bg-green-500/10 text-green-400' : stat.color === 'cyan' ? 'bg-neon-cyan/10 text-neon-cyan' : 'bg-plasma/10 text-purple-400'}`}>
-                  {stat.icon}
-                </div>
-                {i === 0 && !loadingStats && (
-                  <ProgressRing value={uniqueSolved} max={Math.max(uniqueSolved + 20, 50)} size={44} strokeWidth={4} color={stat.ring} />
-                )}
-              </div>
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-1">{stat.label}</p>
-              <h3 className={`text-3xl font-black font-display ${stat.textColor}`}>
-                {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-zinc-600" /> : stat.value}
-              </h3>
-            </GlowCard>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* ── Lower Grid ── */}
-      <div className="grid lg:grid-cols-5 gap-6">
-        {/* Recent Submissions — 3 cols */}
-        <motion.div variants={fadeLeft} initial="hidden" animate="visible" className="lg:col-span-3">
-          <GlowCard variant="cyan" className="border border-neon-cyan/10 p-6 h-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Clock className="w-4 h-4 text-neon-cyan" /> Recent Submissions
-              </h2>
-              <Link to="/history" className="text-xs font-bold text-neon-cyan/70 hover:text-neon-cyan transition-colors flex items-center gap-1">
-                View all <ChevronRight className="w-3 h-3" />
-              </Link>
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+            className={`border border-[var(--forge-border)] p-6 flex flex-col relative overflow-hidden group ${stat.bg}`}
+          >
+            <div className="absolute top-0 right-0 w-16 h-16 opacity-10 group-hover:opacity-20 transition-opacity">
+              {stat.icon}
             </div>
-            <div className="space-y-2.5">
-              {loadingStats ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                ))
-              ) : recent.length === 0 ? (
-                <div className="text-center py-10">
-                  <Code2 className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-                  <p className="text-zinc-600 text-sm">No submissions yet.</p>
-                  <Link to="/problems" className="text-neon-cyan text-sm font-bold hover:underline">Start solving!</Link>
-                </div>
-              ) : (
-                recent.map((s, i) => (
-                  <motion.div
-                    key={s._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="flex flex-wrap gap-2 justify-between items-center p-3.5 rounded-xl border transition-colors"
-                    style={{ background: 'rgba(255,255,255,0.025)', borderColor: s.verdict === 'Accepted' ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)', borderLeft: `3px solid ${s.verdict === 'Accepted' ? '#22c55e' : '#ef4444'}` }}
-                  >
-                    <div>
-                      <h4 className="font-semibold text-zinc-200 text-sm">{s.problemId?.title || 'Unknown'}</h4>
-                      <p className="text-xs text-zinc-600 mt-0.5">{LANG_DISPLAY[s.language] || s.language} · {timeAgo(s.createdAt)}</p>
-                    </div>
-                    <span className={s.verdict === 'Accepted' ? 'badge-accepted' : 'badge-rejected'}>
-                      {s.verdict || s.status}
-                    </span>
-                  </motion.div>
-                ))
+            
+            <div className="flex items-center justify-between mb-8 z-10">
+              <div className="p-3 bg-[#0A0D11] border border-[var(--forge-border)]" style={{ color: stat.color }}>
+                {stat.icon}
+              </div>
+              {i === 0 && !loadingStats && (
+                <ProgressRing value={uniqueSolved} max={Math.max(uniqueSolved + 10, 50)} size={48} strokeWidth={4} color="var(--forge-green)" />
               )}
             </div>
-          </GlowCard>
-        </motion.div>
-
-        {/* Quick Links — 2 cols */}
-        <motion.div variants={fadeRight} initial="hidden" animate="visible" className="lg:col-span-2">
-          <GlowCard variant="purple" className="border border-plasma/10 p-6 h-full">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-6">
-              <Zap className="w-4 h-4 text-purple-400" /> Quick Links
-            </h2>
-            <div className="space-y-2.5">
-              {quickLinks.map(({ title, desc, to, icon, color }, i) => {
-                const c = quickLinkColors[color];
-                return (
-                  <Link key={i} to={to}>
-                    <motion.div
-                      whileHover={{ x: 4 }}
-                      className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 group ${c.border} ${c.hover}`}
-                      style={{ background: 'rgba(255,255,255,0.02)' }}
-                    >
-                      <div className={`p-2 rounded-lg ${c.bg} ${c.text} flex-shrink-0`}>{icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-zinc-200 text-sm group-hover:text-white transition-colors">{title}</h4>
-                        <p className="text-xs text-zinc-600">{desc}</p>
-                      </div>
-                      <ChevronRight className={`w-4 h-4 ${c.text} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                    </motion.div>
-                  </Link>
-                );
-              })}
+            
+            <div className="mt-auto z-10">
+              <p className="text-[10px] font-black text-[var(--forge-dim)] uppercase tracking-widest mb-1">{stat.label}</p>
+              <h3 className="text-3xl font-black font-display text-[var(--forge-white)] uppercase tracking-wider">
+                {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[var(--forge-steel)]" /> : stat.value}
+              </h3>
             </div>
-          </GlowCard>
-        </motion.div>
+            <div className="absolute bottom-0 left-0 w-full h-[2px]" style={{ backgroundColor: stat.color, opacity: 0.3 }} />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ── LOWER GRID ── */}
+      <div className="grid lg:grid-cols-5 gap-6">
+        
+        {/* Recent Deployments */}
+        <div className="lg:col-span-3">
+          <div className="border border-[var(--forge-border)] bg-[var(--forge-panel)] p-6 h-full flex flex-col">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--forge-border)]">
+              <h2 className="text-[10px] uppercase font-black text-[var(--forge-dim)] tracking-widest flex items-center gap-2">
+                <Activity className="w-4 h-4 text-[var(--forge-ember)]" /> Deployment Logs
+              </h2>
+              <Link to="/history" className="text-[10px] uppercase font-black text-[var(--forge-steel)] hover:text-[var(--forge-ember)] transition-colors flex items-center gap-1">
+                View All <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto">
+              {loadingStats ? (
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-14 bg-[#11161B] border border-[var(--forge-border)] animate-pulse" />
+                  ))}
+                </div>
+              ) : recent.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-[var(--forge-border)] bg-[#0C1015]">
+                  <Code2 className="w-8 h-8 text-[var(--forge-dim)] mx-auto mb-3" />
+                  <p className="text-[var(--forge-steel)] text-sm font-mono uppercase tracking-widest">No data blocks found</p>
+                  <Link to="/problems"><ForgeButton className="mt-4 text-[10px]">Assign Target</ForgeButton></Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recent.map((s, i) => (
+                    <motion.div
+                      key={s._id}
+                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                      className="flex flex-wrap gap-3 justify-between items-center p-4 border border-[var(--forge-border)] bg-[#11161B] hover:border-[var(--forge-steel)] transition-colors relative group"
+                    >
+                      <div className={`absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity ${s.verdict === 'Accepted' ? 'bg-[var(--forge-green)]' : 'bg-[var(--forge-red)]'}`} />
+                      <div>
+                        <h4 className="font-bold text-[var(--forge-white)] font-mono text-sm tracking-tight">{s.problemId?.title || 'Unknown Asset'}</h4>
+                        <p className="text-[10px] text-[var(--forge-dim)] uppercase tracking-widest mt-1">
+                          {LANG_DISPLAY[s.language] || s.language} <span className="text-[var(--forge-border)] mx-1">/</span> {timeAgo(s.createdAt)}
+                        </p>
+                      </div>
+                      <div className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border ${s.verdict === 'Accepted' ? 'border-[var(--forge-green)]/30 text-[var(--forge-green)] bg-[var(--forge-green)]/10' : 'border-[var(--forge-red)]/30 text-[var(--forge-red)] bg-[#1A1010]'}`}>
+                        {s.verdict || s.status}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Directives */}
+        <div className="lg:col-span-2">
+          <div className="border border-[var(--forge-border)] bg-[var(--forge-panel)] p-6 h-full flex flex-col">
+            <h2 className="text-[10px] uppercase font-black text-[var(--forge-dim)] tracking-widest flex items-center gap-2 mb-6 pb-4 border-b border-[var(--forge-border)]">
+              <Zap className="w-4 h-4 text-[var(--forge-ember)]" /> Directives
+            </h2>
+            <div className="flex-1 space-y-3">
+              {quickLinks.map(({ title, desc, to, icon }, i) => (
+                <Link key={i} to={to} className="block group">
+                  <div className="flex items-center justify-between p-4 border border-[var(--forge-border)] bg-[#0C1015] group-hover:bg-[#11161B] group-hover:border-[var(--forge-steel)] transition-all relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--forge-ember)] opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_8px_var(--forge-glow)]" />
+                    
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center border border-[var(--forge-border)] text-[var(--forge-dim)] group-hover:border-[var(--forge-ember)] group-hover:text-[var(--forge-ember)] transition-colors bg-[#0A0D11]">
+                        {icon}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-[var(--forge-white)] text-sm uppercase tracking-widest group-hover:text-[var(--forge-ember)] transition-colors">{title}</h4>
+                        <p className="text-[10px] text-[var(--forge-steel)] font-mono mt-0.5">{desc}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[var(--forge-dim)] group-hover:text-[var(--forge-ember)] group-hover:translate-x-1 transition-all" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

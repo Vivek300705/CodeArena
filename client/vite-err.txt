@@ -1,0 +1,36 @@
+✗ Build failed in 639ms
+error during build:
+Build failed with 2 errors:
+
+[plugin vite:css] D:/project/CodeArena/client/src/styles/components.css:1:0
+CssSyntaxError: [postcss] D:/project/CodeArena/client/src/styles/components.css:1:1: `@layer components` is used but no matching `@tailwind components` directive is present.
+    at Input.error (D:\project\CodeArena\client\node_modules\postcss\lib\input.js:135:16)
+    at AtRule.error (D:\project\CodeArena\client\node_modules\postcss\lib\node.js:146:32)
+    at normalizeTailwindDirectives (D:\project\CodeArena\client\node_modules\tailwindcss\lib\lib\normalizeTailwindDirectives.js:72:32)
+    at D:\project\CodeArena\client\node_modules\tailwindcss\lib\processTailwindFeatures.js:29:98
+    at plugins (D:\project\CodeArena\client\node_modules\tailwindcss\lib\plugin.js:38:69)
+    at LazyResult.runOnRoot (D:\project\CodeArena\client\node_modules\postcss\lib\lazy-result.js:361:16)
+    at LazyResult.runAsync (D:\project\CodeArena\client\node_modules\postcss\lib\lazy-result.js:290:26)
+    at LazyResult.async (D:\project\CodeArena\client\node_modules\postcss\lib\lazy-result.js:192:30)
+    at LazyResult.then (D:\project\CodeArena\client\node_modules\postcss\lib\lazy-result.js:436:17)
+[plugin vite:css] D:/project/CodeArena/client/src/styles/typography.css:14:0
+CssSyntaxError: [postcss] D:/project/CodeArena/client/src/styles/typography.css:14:1: `@layer base` is used but no matching `@tailwind base` directive is present.
+    at Input.error (D:\project\CodeArena\client\node_modules\postcss\lib\input.js:135:16)
+    at AtRule.error (D:\project\CodeArena\client\node_modules\postcss\lib\node.js:146:32)
+    at normalizeTailwindDirectives (D:\project\CodeArena\client\node_modules\tailwindcss\lib\lib\normalizeTailwindDirectives.js:72:32)
+    at D:\project\CodeArena\client\node_modules\tailwindcss\lib\processTailwindFeatures.js:29:98
+    at plugins (D:\project\CodeArena\client\node_modules\tailwindcss\lib\plugin.js:38:69)
+    at LazyResult.runOnRoot (D:\project\CodeArena\client\node_modules\postcss\lib\lazy-result.js:361:16)
+    at LazyResult.runAsync (D:\project\CodeArena\client\node_modules\postcss\lib\lazy-result.js:290:26)
+    at async runPostCSS (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/chunks/node.js:20913:19)
+    at async compilePostCSS (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/chunks/node.js:20897:6)
+    at async compileCSS (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/chunks/node.js:20827:26)
+    at aggregateBindingErrorsIntoJsError (file:///D:/project/CodeArena/client/node_modules/rolldown/dist/shared/error-CP8smW_P.mjs:48:18)
+    at unwrapBindingResult (file:///D:/project/CodeArena/client/node_modules/rolldown/dist/shared/error-CP8smW_P.mjs:18:128)
+    at #build (file:///D:/project/CodeArena/client/node_modules/rolldown/dist/shared/rolldown-build-4YnQkA76.mjs:3311:34)
+    at async buildEnvironment (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/chunks/node.js:32794:64)
+    at async Object.build (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/chunks/node.js:33216:19)
+    at async Object.buildApp (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/chunks/node.js:33213:153)
+    at async CAC.<anonymous> (file:///D:/project/CodeArena/client/node_modules/vite/dist/node/cli.js:778:3) {
+  errors: [Getter/Setter]
+}

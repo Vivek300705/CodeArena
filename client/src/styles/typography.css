@@ -1,0 +1,27 @@
+/* Display font — aggressive, angular, unique */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+/* Body font — readable, futuristic mono */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+/* UI font — clean, slightly condensed */
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&display=swap');
+
+:root {
+  --font-display: 'Orbitron', monospace;
+  --font-mono:    'Space Mono', monospace;
+  --font-ui:      'Exo 2', sans-serif;
+}
+
+body {
+    font-family: var(--font-ui);
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }

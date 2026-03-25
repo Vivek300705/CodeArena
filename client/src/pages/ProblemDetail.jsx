@@ -2,90 +2,78 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Send, Clock, Cpu, ChevronLeft,
-  CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2
+  CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2, GitCommit, FileText, Check
 } from 'lucide-react';
 import { getProblemById, submitCode, getSubmissionById } from '../services/problemService.js';
 import { useSocket } from '../hooks/useSocket.js';
+import DifficultyBadge from '../components/DifficultyBadge.jsx';
+import ForgeButton from '../components/ForgeButton.jsx';
 
 const LANGUAGES = [
-  { id: 'javascript', name: 'JavaScript (Node.js)', ext: 'js' },
-  { id: 'python',     name: 'Python 3',             ext: 'py' },
-  { id: 'cpp',        name: 'C++ 17',               ext: 'cpp' },
-  { id: 'c',          name: 'C',                    ext: 'c' },
-  { id: 'java',       name: 'Java',                 ext: 'java' },
-  { id: 'go',         name: 'Go',                   ext: 'go' },
-  { id: 'rust',       name: 'Rust',                 ext: 'rs' },
+  { id: 'javascript', name: 'JavaScript (Node.js)' },
+  { id: 'python',     name: 'Python 3' },
+  { id: 'cpp',        name: 'C++ 17' },
+  { id: 'c',          name: 'C' },
+  { id: 'java',       name: 'Java' },
+  { id: 'go',         name: 'Go' },
+  { id: 'rust',       name: 'Rust' },
 ];
 
 const DEFAULT_CODE = {
-  javascript: '// Write your solution here\n',
-  python:     '# Write your solution here\n',
-  cpp:        '// Write your solution here\n',
-  c:          '// Write your solution here\n',
-  java:       '// Write your solution here\n',
-  go:         '// Write your solution here\n',
-  rust:       '// Write your solution here\n',
-};
-
-const DIFFICULTY_COLOR = {
-  easy:   'text-green-400 bg-green-400/10 border-green-400/20',
-  medium: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-  hard:   'text-red-400 bg-red-400/10 border-red-400/20',
+  javascript: '/**\n * @param {any} input\n * @return {any}\n */\nfunction solve(input) {\n  // forge your solution here\n  \n}\n',
+  python:     'class Solution:\n    def solve(self, input):\n        # forge your solution here\n        pass\n',
+  cpp:        'class Solution {\npublic:\n    auto solve(auto input) {\n        // forge your solution here\n        \n    }\n};\n',
+  c:          '// forge your solution here\nvoid solve() {\n  \n}\n',
+  java:       'class Solution {\n    public void solve() {\n        // forge your solution here\n        \n    }\n}\n',
+  go:         'func solve() {\n    // forge your solution here\n}\n',
+  rust:       'impl Solution {\n    pub fn solve() {\n        // forge your solution here\n    }\n}\n',
 };
 
 const VERDICT_STYLE = {
-  Accepted:            { color: 'text-green-500', icon: <CheckCircle className="w-5 h-5" /> },
-  'Wrong Answer':      { color: 'text-red-400',   icon: <XCircle className="w-5 h-5" /> },
-  'Runtime Error':     { color: 'text-red-400',   icon: <XCircle className="w-5 h-5" /> },
-  'Time Limit Exceeded': { color: 'text-yellow-400', icon: <Clock className="w-5 h-5" /> },
+  Accepted:            { color: 'text-[var(--forge-green)]', icon: <CheckCircle className="w-6 h-6" /> },
+  'Wrong Answer':      { color: 'text-[var(--forge-red)]',   icon: <XCircle className="w-6 h-6" /> },
+  'Runtime Error':     { color: 'text-[var(--forge-red)]',   icon: <AlertCircle className="w-6 h-6" /> },
+  'Time Limit Exceeded': { color: 'text-[var(--forge-yellow)]', icon: <Clock className="w-6 h-6" /> },
 };
 
 export default function ProblemDetail() {
   const { id } = useParams();
 
-  // Problem data
   const [problem, setProblem] = useState(null);
   const [problemLoading, setProblemLoading] = useState(true);
   const [problemError, setProblemError] = useState(null);
   
-  useDocumentTitle(problem ? problem.title : 'Problem');
+  const [activeTab, setActiveTab] = useState('description');
 
-  // Editor
+  useDocumentTitle(problem ? `${problem.title} | CodeArena` : 'Forge');
+
   const [language, setLanguage] = useState('javascript');
   const [code, setCode] = useState(DEFAULT_CODE['javascript']);
 
-  // Submission
   const [submissionId, setSubmissionId] = useState(null);
-  const submissionIdRef = useRef(null); // ref keeps socket callback always fresh
+  const submissionIdRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [verdict, setVerdict] = useState(null); // { status, verdict, runtime, error }
+  const [verdict, setVerdict] = useState(null);
   const [submitError, setSubmitError] = useState(null);
+  const [traceLines, setTraceLines] = useState([]);
 
-  // Fetch problem from real API
   useEffect(() => {
     setProblemLoading(true);
     getProblemById(id)
       .then((data) => {
         setProblem(data);
-        // On initial load, try to set the code to the boilerplate for the initial language ('javascript')
         if (data && data.boilerplates && data.boilerplates.length > 0) {
           const bp = data.boilerplates.find(b => b.language === 'javascript' || b.language === 'node');
-          if (bp) {
-            setCode(bp.code);
-          }
+          if (bp) setCode(bp.code);
         }
       })
-      .catch((err) => setProblemError(err.response?.data?.message || 'Failed to load problem'))
+      .catch((err) => setProblemError(err.response?.data?.message || 'Failed to load transmission.'))
       .finally(() => setProblemLoading(false));
   }, [id]);
 
-  // Socket: receive live verdict update
-  // Use a stable callback backed by a ref so we never compare against a stale
-  // submissionId captured at render time. Fixes the race where the worker
-  // completes before setSubmissionId() has been called on the client.
   const handleVerdictUpdate = useCallback((data) => {
     if (!submissionIdRef.current) return;
     if (data.submissionId !== submissionIdRef.current) return;
@@ -95,34 +83,56 @@ export default function ProblemDetail() {
 
   useSocket(handleVerdictUpdate);
 
-  // Polling fallback: in case the WebSocket event was missed (e.g. brief
-  // disconnect), poll the specific submission every 3s while judging.
-  // This effect depends on BOTH isSubmitting AND submissionId so it re-fires
-  // once the submission ID is set (fixes the race where the effect ran before
-  // the API call returned).
   useEffect(() => {
     if (!isSubmitting || !submissionIdRef.current) return;
-    const id = submissionIdRef.current;
     const interval = setInterval(async () => {
       try {
-        const sub = await getSubmissionById(id);
+        const sub = await getSubmissionById(submissionIdRef.current);
         if (sub && sub.status === 'completed') {
-          setVerdict({ submissionId: sub._id, verdict: sub.verdict, status: sub.status, error: sub.error, runtime: sub.runtime, testcasesPassed: sub.testcasesPassed, totalTestcases: sub.totalTestcases });
+          setVerdict({ 
+            submissionId: sub._id, verdict: sub.verdict, status: sub.status, 
+            error: sub.error, runtime: sub.runtime, testcasesPassed: sub.testcasesPassed, 
+            totalTestcases: sub.totalTestcases 
+          });
           setIsSubmitting(false);
           clearInterval(interval);
         }
-      } catch (e) { /* ignore poll errors — server might be temporarily unreachable */ }
-    }, 3000);
+      } catch (e) { /* ignore */ }
+    }, 2500);
     return () => clearInterval(interval);
-  }, [isSubmitting, submissionId]); // submissionId in deps ensures effect re-runs once ID is available
+  }, [isSubmitting, submissionId]);
+
+  useEffect(() => {
+    if (!isSubmitting) return;
+    
+    setTraceLines([]);
+    const lines = [
+      '[SYS] Initializing secure worker enclave...',
+      `[SYS] Checking constraints (Memory: ${problem?.memoryLimit || 256}MB) -> OK`,
+      `[COMPILER] Build starting for ${language}...`,
+      '[COMPILER] Optimization flags: -O3 -march=native',
+      '[COMPILER] Build successful. 42ms.',
+      '[JUDGE] Connecting to testcase stream...',
+      '[JUDGE] Executing against hidden constraints...'
+    ];
+
+    let currentIdx = 0;
+    const interval = setInterval(() => {
+      if (currentIdx < lines.length) {
+        setTraceLines(prev => [...prev, lines[currentIdx]]);
+        currentIdx++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [isSubmitting, language, problem]);
 
   const handleLanguageChange = (e) => {
     const lang = e.target.value;
     setLanguage(lang);
-    
-    // Switch to problem-specific boilerplate if available
     if (problem && problem.boilerplates && problem.boilerplates.length > 0) {
-      // Map frontend lang to backend if needed (javascript -> node in backend)
       const mappedLang = lang === 'javascript' ? 'node' : lang;
       const bp = problem.boilerplates.find(b => b.language === mappedLang || b.language === lang);
       if (bp) {
@@ -130,8 +140,6 @@ export default function ProblemDetail() {
         return;
       }
     }
-    
-    // Fallback locally
     setCode(DEFAULT_CODE[lang]);
   };
 
@@ -146,13 +154,11 @@ export default function ProblemDetail() {
         code,
         language: language === 'javascript' ? 'node' : language,
       });
-      // Update BOTH the ref (used by the stable socket callback) and
-      // the state (used for polling useEffect dependency)
       submissionIdRef.current = submission._id;
       setSubmissionId(submission._id);
-      // Verdict will arrive via WebSocket (handleVerdictUpdate above)
+      setActiveTab('submissions');
     } catch (err) {
-      setSubmitError(err.response?.data?.message || 'Submission failed. Please try again.');
+      setSubmitError(err.response?.data?.message || 'Transmission failed. Engine overloaded.');
       setIsSubmitting(false);
     }
   };
@@ -160,113 +166,233 @@ export default function ProblemDetail() {
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background overflow-hidden">
-      {/* Left Panel: Problem Description */}
-      <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-white/5 bg-surface/30">
-        <div className="p-4 border-b border-white/5 flex items-center gap-4 bg-background/50">
-          <Link to="/problems" className="p-2 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white">
-            <ChevronLeft className="w-5 h-5" />
+    <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] bg-[var(--forge-bg)] font-ui overflow-hidden">
+      
+      {/* ── LEFT PANEL (PROBLEM DETAILS) ── */}
+      <div className="w-full md:w-[40%] flex flex-col border-r border-[var(--forge-border)] bg-[var(--forge-panel)] relative z-10">
+        
+        {/* Header Tabs */}
+        <div className="flex border-b border-[var(--forge-border)] bg-[var(--forge-bg)]">
+          <Link to="/problems" className="flex items-center justify-center w-14 border-r border-[var(--forge-border)] text-[var(--forge-steel)] hover:text-[var(--forge-ember)] transition-colors hover:bg-[var(--forge-ember)]/10">
+            <ChevronLeft className="w-6 h-6" />
           </Link>
-          <div className="flex-1">
-            {problemLoading ? (
-              <div className="h-6 w-48 bg-white/5 rounded animate-pulse" />
-            ) : (
-              <h1 className="text-xl font-bold">{problem?.title}</h1>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-          {problemLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-4 bg-white/5 rounded animate-pulse" style={{ width: `${70 + (i % 3) * 10}%` }} />
-              ))}
-            </div>
-          ) : problemError ? (
-            <div className="flex items-center gap-2 text-red-400 p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-              <AlertCircle className="w-5 h-5 shrink-0" /> {problemError}
-            </div>
-          ) : problem ? (
-            <>
-              <div className="flex gap-3 mb-6">
-                <span className={`text-xs px-2.5 py-1 rounded-full font-bold tracking-wide border ${DIFFICULTY_COLOR[problem.difficulty?.toLowerCase()] || 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20'}`}>
-                  {capitalize(problem.difficulty)}
-                </span>
-                {(problem.tags || []).map(tag => (
-                  <span key={tag} className="text-xs px-2.5 py-1 text-zinc-400 bg-white/5 border border-white/10 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              <div className="prose prose-invert max-w-none text-zinc-300">
-                {(problem.description || '').split('\n\n').map((paragraph, i) => (
-                  <p key={i} className="mb-4">{paragraph}</p>
-                ))}
-
-                {(problem.examples || []).length > 0 && (
-                  <>
-                    <h3 className="text-white font-bold text-lg mt-8 mb-4">Examples:</h3>
-                    <div className="space-y-6">
-                      {problem.examples.map((ex, i) => (
-                        <div key={i} className="bg-surface/50 border border-white/10 rounded-xl p-4 font-mono text-sm overflow-x-auto">
-                          <div className="mb-2"><span className="text-zinc-500">Input: </span><span className="text-cyan-400">{ex.input}</span></div>
-                          <div className="mb-2"><span className="text-zinc-500">Output: </span><span className="text-green-400">{ex.output}</span></div>
-                          {ex.explanation && <div><span className="text-zinc-500">Explanation: </span><span className="text-zinc-300 font-sans">{ex.explanation}</span></div>}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/5">
-                  <div className="bg-surface p-4 rounded-xl border border-white/5 flex items-center gap-3">
-                    <Clock className="text-primary w-5 h-5" />
-                    <div>
-                      <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Time Limit</div>
-                      <div className="font-mono text-sm mt-0.5">{problem.timeLimit}s</div>
-                    </div>
-                  </div>
-                  <div className="bg-surface p-4 rounded-xl border border-white/5 flex items-center gap-3">
-                    <Cpu className="text-purple-400 w-5 h-5" />
-                    <div>
-                      <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider">Memory Limit</div>
-                      <div className="font-mono text-sm mt-0.5">{problem.memoryLimit} MB</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : null}
-        </div>
-      </div>
-
-      {/* Right Panel: Editor & Console */}
-      <div className="w-full h-1/2 md:w-1/2 md:h-full flex flex-col">
-        {/* Editor Toolbar */}
-        <div className="h-14 border-b border-white/5 bg-background flex items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Code2 className="w-4 h-4 text-zinc-500" />
-            <select
-              value={language}
-              onChange={handleLanguageChange}
-              className="bg-transparent text-sm font-medium outline-none text-zinc-300 hover:text-white cursor-pointer"
-            >
-              {LANGUAGES.map(lang => (
-                <option key={lang.id} value={lang.id} className="bg-surface text-foreground">{lang.name}</option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={() => handleLanguageChange({ target: { value: language } })}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors border border-white/5 text-zinc-300"
+          <button 
+            onClick={() => setActiveTab('description')}
+            className={`flex-1 py-4 text-sm font-bold tracking-widest uppercase transition-all ${activeTab === 'description' ? 'text-[var(--forge-white)] border-b-2 border-[var(--forge-ember)] bg-[#11161B]' : 'text-[var(--forge-steel)] hover:text-[var(--forge-white)] hover:bg-[#11161B]'}`}
           >
-            <Terminal className="w-4 h-4" /> Reset
+            <span className="flex items-center justify-center gap-2"><FileText className="w-4 h-4" /> Description</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('submissions')}
+            className={`flex-1 py-4 text-sm font-bold tracking-widest uppercase transition-all ${activeTab === 'submissions' ? 'text-[var(--forge-white)] border-b-2 border-[var(--forge-ember)] bg-[#11161B]' : 'text-[var(--forge-steel)] hover:text-[var(--forge-white)] hover:bg-[#11161B]'}`}
+          >
+            <span className="flex items-center justify-center gap-2"><GitCommit className="w-4 h-4" /> Submissions</span>
           </button>
         </div>
 
-        {/* Monaco Editor */}
+        {/* Panel Content */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
+          {activeTab === 'description' ? (
+            problemLoading ? (
+              <div className="space-y-6">
+                <div className="h-8 bg-[var(--forge-border)] rounded-sm animate-pulse w-3/4" />
+                <div className="space-y-3">
+                  <div className="h-4 bg-[var(--forge-border)] rounded-sm animate-pulse w-full" />
+                  <div className="h-4 bg-[var(--forge-border)] rounded-sm animate-pulse w-5/6" />
+                  <div className="h-4 bg-[var(--forge-border)] rounded-sm animate-pulse w-4/6" />
+                </div>
+              </div>
+            ) : problemError ? (
+              <div className="p-4 border border-[var(--forge-red)]/30 bg-[var(--forge-red)]/5 text-[var(--forge-red)] flex items-center gap-3">
+                <AlertCircle className="w-5 h-5" /> {problemError}
+              </div>
+            ) : problem ? (
+              <>
+                <h1 className="text-3xl font-display font-black text-[var(--forge-white)] mb-4">{problem.title}</h1>
+                <div className="flex flex-wrap gap-3 mb-8 pb-6 border-b border-[var(--forge-border)]">
+                  <DifficultyBadge difficulty={capitalize(problem.difficulty)} />
+                  {(problem.tags || []).map(tag => (
+                    <span key={tag} className="text-[10px] px-2.5 py-1 text-[var(--forge-steel)] bg-[#0C1015] border border-[var(--forge-border)] font-mono tracking-wider">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="prose prose-invert max-w-none text-zinc-300 font-ui text-base leading-relaxed">
+                  {(problem.description || '').split('\n\n').map((paragraph, i) => (
+                    <p key={i} className="mb-4">{paragraph}</p>
+                  ))}
+
+                  {(problem.examples || []).length > 0 && (
+                    <div className="mt-10 space-y-6">
+                      <h3 className="text-[var(--forge-white)] font-bold text-lg uppercase tracking-widest font-display">Examples</h3>
+                      {problem.examples.map((ex, i) => (
+                        <div key={i} className="bg-[#0A0D11] border-l-2 border-[var(--forge-border)] p-5 font-mono text-sm shadow-inner relative overflow-hidden group">
+                          <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--forge-ember)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="mb-3"><span className="text-[var(--forge-dim)]">input: </span><span className="text-[var(--forge-white)]">{ex.input}</span></div>
+                          <div className="mb-3"><span className="text-[var(--forge-dim)]">output: </span><span className="text-[var(--forge-green)] drop-shadow-[0_0_8px_var(--forge-green)] font-bold">{ex.output}</span></div>
+                          {ex.explanation && <div><span className="text-[var(--forge-dim)]">explain: </span><span className="text-[var(--forge-steel)] font-sans">{ex.explanation}</span></div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 mt-10 pt-6 border-t border-[var(--forge-border)]">
+                    <div className="flex items-center gap-3">
+                      <Clock className="text-[var(--forge-dim)] w-4 h-4" />
+                      <span className="text-[var(--forge-steel)] font-mono text-xs">Limit: {problem.timeLimit}s</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Cpu className="text-[var(--forge-dim)] w-4 h-4" />
+                      <span className="text-[var(--forge-steel)] font-mono text-xs">Mem: {problem.memoryLimit}MB</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null
+          ) : (
+            // Submissions Tab
+            <div className="font-mono">
+              {!submissionId && !verdict && !isSubmitting && (
+                <div className="text-center py-20 text-[var(--forge-dim)]">
+                  <Terminal className="w-10 h-10 mx-auto mb-4 opacity-50" />
+                  <p>Awaiting transmission. Submit your code.</p>
+                </div>
+              )}
+
+              <AnimatePresence mode="wait">
+                {isSubmitting && (
+                  <motion.div 
+                    key="submitting"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-3 text-[var(--forge-ember)] mb-6 border border-[var(--forge-ember)]/30 bg-[var(--forge-ember)]/10 p-4">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="font-bold tracking-widest uppercase">System engaged. Processing...</span>
+                    </div>
+                    {traceLines.map((line, i) => (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} 
+                        key={i} className="text-[var(--forge-steel)] text-xs"
+                      >
+                        {line}
+                      </motion.div>
+                    ))}
+                    <div className="w-4 h-5 bg-[var(--forge-ember)] animate-pulse mt-2" />
+                  </motion.div>
+                )}
+
+                {!isSubmitting && verdict && (
+                  <motion.div 
+                    key="verdict"
+                    initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
+                    className="space-y-6"
+                  >
+                    <div className={`p-6 border-l-4 ${verdict.verdict === 'Accepted' ? 'border-[var(--forge-green)] bg-[var(--forge-green)]/5' : 'border-[var(--forge-red)] bg-[var(--forge-red)]/5'}`}>
+                      <div className={`font-black text-2xl uppercase tracking-widest flex items-center gap-3 mb-2 ${VERDICT_STYLE[verdict.verdict]?.color || 'text-[var(--forge-white)]'}`}>
+                        {VERDICT_STYLE[verdict.verdict]?.icon}
+                        {verdict.verdict}
+                      </div>
+
+                      {verdict.totalTestcases > 0 && (
+                        <div className="mt-6">
+                          <div className="flex justify-between text-xs text-[var(--forge-steel)] mb-2 uppercase tracking-widest">
+                            <span>Testcase Penetration</span>
+                            <span className="text-[var(--forge-white)]">{verdict.testcasesPassed} / {verdict.totalTestcases}</span>
+                          </div>
+                          <div className="w-full h-1 bg-[var(--forge-border)] overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(verdict.testcasesPassed / verdict.totalTestcases) * 100}%` }}
+                              transition={{ duration: 1, ease: 'easeOut' }}
+                              className={`h-full ${verdict.verdict === 'Accepted' ? 'bg-[var(--forge-green)] drop-shadow-[0_0_8px_var(--forge-green)]' : 'bg-[var(--forge-red)]'}`}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {verdict.runtime && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-[var(--forge-panel)] border border-[var(--forge-border)]">
+                          <div className="text-[10px] text-[var(--forge-dim)] uppercase tracking-widest mb-1">Runtime</div>
+                          <div className="text-xl text-[var(--forge-white)]">{verdict.runtime} <span className="text-sm text-[var(--forge-steel)]">ms</span></div>
+                        </div>
+                        <div className="p-4 bg-[var(--forge-panel)] border border-[var(--forge-border)]">
+                          <div className="text-[10px] text-[var(--forge-dim)] uppercase tracking-widest mb-1">Status</div>
+                          <div className="text-[var(--forge-green)] font-bold">OPTIMIZED</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {verdict.error && (
+                      <div className="p-4 bg-[#1A1010] border border-[var(--forge-red)]/30 text-[var(--forge-red)] text-xs overflow-x-auto">
+                        <pre>{verdict.error}</pre>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── RIGHT PANEL (EDITOR) ── */}
+      <div className="w-full md:w-[60%] flex flex-col relative bg-[#0D1117]">
+        
+        {/* Submitting Overlay */}
+        <AnimatePresence>
+          {isSubmitting && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-[#080A0C]/80 backdrop-blur-sm flex items-center justify-center p-8"
+            >
+              <div className="text-center font-mono">
+                <Terminal className="w-16 h-16 text-[var(--forge-ember)] mx-auto mb-6 animate-pulse" />
+                <div className="text-2xl font-black text-[var(--forge-white)] tracking-widest uppercase mb-2">Compiling</div>
+                <div className="text-[var(--forge-ember)] text-sm tracking-widest">Executing Instructions...</div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Editor Toolbar */}
+        <div className="h-16 border-b border-[var(--forge-border)] bg-[var(--forge-bg)] flex items-center justify-between px-6 z-10 shadow-md">
+          <div className="flex items-center gap-3">
+            <Code2 className="w-5 h-5 text-[var(--forge-ember)] drop-shadow-[0_0_5px_var(--forge-glow)]" />
+            <select
+              value={language}
+              onChange={handleLanguageChange}
+              className="bg-transparent text-sm font-bold font-mono outline-none text-[var(--forge-white)] cursor-pointer py-1 border-b-2 border-transparent focus:border-[var(--forge-ember)] transition-colors"
+            >
+              {LANGUAGES.map(lang => (
+                <option key={lang.id} value={lang.id} className="bg-[#11161B] text-white py-2">{lang.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex gap-3">
+            <ForgeButton 
+              disabled={isSubmitting || problemLoading}
+              variant="secondary"
+              className="px-6 py-2 border-[var(--forge-border)] text-[var(--forge-steel)] hover:text-white"
+            >
+              [ RUN ]
+            </ForgeButton>
+            <ForgeButton 
+              onClick={handleSubmit}
+              disabled={isSubmitting || problemLoading}
+              variant="primary"
+              className="px-8 py-2 font-black shadow-[0_0_15px_var(--forge-glow)] flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" /> [ SUBMIT ]
+            </ForgeButton>
+          </div>
+        </div>
+
+        {/* Monaco Workspace */}
         <div className="flex-1 relative">
           <Editor
             height="100%"
@@ -276,88 +402,20 @@ export default function ProblemDetail() {
             onChange={(value) => setCode(value)}
             options={{
               minimap: { enabled: false },
-              fontSize: 14,
-              fontFamily: "'Fira Code', monospace",
+              fontSize: 15,
+              fontFamily: "'Space Mono', 'Fira Code', monospace",
               fontLigatures: true,
-              lineHeight: 24,
-              padding: { top: 16 },
+              lineHeight: 26,
+              padding: { top: 24, bottom: 24 },
               scrollBeyondLastLine: false,
               smoothScrolling: true,
               cursorBlinking: 'smooth',
-              cursorSmoothCaretAnimation: 'on',
+              cursorWidth: 3,
               renderLineHighlight: 'all',
+              wordWrap: 'on'
             }}
+            loading={<div className="flex items-center justify-center h-full text-[var(--forge-dim)] font-mono animate-pulse">Initializing editor engine...</div>}
           />
-        </div>
-
-        {/* Console / Output Area */}
-        <div className="h-[200px] border-t border-white/5 bg-background flex flex-col shrink-0">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-surface/30">
-            <div className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-              <Terminal className="w-4 h-4" /> Console
-            </div>
-            {verdict?.runtime && (
-              <div className="flex items-center gap-4 text-zinc-400 font-mono text-xs">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-primary" /> {verdict.runtime} ms</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 p-4 overflow-y-auto font-mono text-sm">
-            {isSubmitting ? (
-              <div className="flex items-center justify-center h-full text-zinc-500 gap-3">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                Judging… waiting for result
-              </div>
-            ) : submitError ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-red-400">
-                <AlertCircle className="w-5 h-5" /> {submitError}
-              </motion.div>
-            ) : verdict ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-                <div className={`font-bold text-lg flex items-center gap-2 ${VERDICT_STYLE[verdict.verdict]?.color || 'text-zinc-300'}`}>
-                  {VERDICT_STYLE[verdict.verdict]?.icon}
-                  {verdict.verdict}
-                </div>
-                {verdict.totalTestcases > 0 && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
-                      <span>Test Cases</span>
-                      <span className="font-mono">{verdict.testcasesPassed}/{verdict.totalTestcases} passed</span>
-                    </div>
-                    <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          verdict.verdict === 'Accepted' ? 'bg-green-500' : 'bg-red-500'
-                        }`}
-                        style={{ width: `${(verdict.testcasesPassed / verdict.totalTestcases) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-                {verdict.error && (
-                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-300 text-xs whitespace-pre-wrap">
-                    {verdict.error}
-                  </div>
-                )}
-              </motion.div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-zinc-600 italic">
-                Submit code to see the verdict
-              </div>
-            )}
-          </div>
-
-          <div className="p-3 border-t border-white/5 bg-surface/30 flex justify-end gap-3">
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || problemLoading}
-              className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white rounded-lg font-medium transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-            >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Submit
-            </button>
-          </div>
         </div>
       </div>
     </div>
