@@ -6,6 +6,7 @@ import { getDuelHistory, challengeUser, acceptChallenge } from '../services/duel
 import { motion } from 'framer-motion';
 import ForgeButton from '../components/ForgeButton.jsx';
 import DifficultyBadge from '../components/DifficultyBadge.jsx';
+import toast from 'react-hot-toast';
 
 export default function DuelDashboard() {
   useSEO({ title: 'Duel Arena', description: 'Create or join a coding duel session.'});
@@ -27,8 +28,9 @@ export default function DuelDashboard() {
     try {
       const { duelId } = await challengeUser();
       navigate(`/duel/${duelId}`);
-    } catch {
-      alert('Failed to forge standard match. Engine timeout.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to forge standard match. Engine timeout.');
     } finally {
       setIsCreating(false);
     }
@@ -40,8 +42,9 @@ export default function DuelDashboard() {
     try {
       await acceptChallenge(challengeId);
       navigate(`/duel/${challengeId}`);
-    } catch {
-      alert('Failed to connect to the arena signature.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to connect to the arena signature.');
     }
   };
 

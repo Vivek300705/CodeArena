@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getProblems, deleteProblem } from '../services/problemService.js';
-import { Plus, Edit2, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import ProblemEditor from '../components/ProblemEditor.jsx';
+import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ui/ConfirmModal.jsx';
 
 export default function AdminDashboard() {
   const [problems, setProblems] = useState([]);
@@ -14,6 +16,9 @@ export default function AdminDashboard() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState(null); // null means "Create" mode
 
+  // Delete Confirm Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null, title: '' });
+
   const fetchProblems = async () => {
     try {
       setLoading(true);
@@ -22,6 +27,7 @@ export default function AdminDashboard() {
       const data = await getProblems();
       setProblems(data);
     } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to fetch problems');
       setError(err.response?.data?.message || 'Failed to fetch problems');
     } finally {
       setLoading(false);
@@ -32,14 +38,20 @@ export default function AdminDashboard() {
     fetchProblems();
   }, []);
 
-  const handleDelete = async (id, title) => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
+  const initiateDelete = (id, title) => {
+    setDeleteConfirm({ isOpen: true, id, title });
+  };
+
+  const executeDelete = async () => {
+    const { id, title } = deleteConfirm;
+    setDeleteConfirm({ ...deleteConfirm, isOpen: false });
     
     try {
       await deleteProblem(id);
       setProblems(problems.filter(p => p._id !== id));
+      toast.success(`Eliminated '${title}' from the database.`);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete problem');
+      toast.error(err.response?.data?.message || 'Failed to delete problem');
     }
   };
 
@@ -99,8 +111,34 @@ export default function AdminDashboard() {
 
       <div className="bg-zinc-950/50 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
         {loading ? (
-          <div className="flex justify-center items-center p-20">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5 opacity-50">
+                  <th className="px-8 py-5 text-xs font-bold tracking-widest uppercase text-zinc-400">Title</th>
+                  <th className="px-8 py-5 text-xs font-bold tracking-widest uppercase text-zinc-400">Difficulty</th>
+                  <th className="px-8 py-5 text-xs font-bold tracking-widest uppercase text-zinc-400">Tags</th>
+                  <th className="px-8 py-5 text-xs font-bold tracking-widest uppercase text-zinc-400 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="animate-pulse hover:bg-white/5 transition-colors">
+                    <td className="px-8 py-5">
+                      <div className="h-6 bg-white/10 rounded-md w-3/4 mb-1"></div>
+                    </td>
+                    <td className="px-8 py-5"><div className="h-7 w-16 bg-white/10 rounded-lg"></div></td>
+                    <td className="px-8 py-5">
+                      <div className="flex gap-2">
+                        <div className="h-6 w-16 bg-white/10 rounded-md"></div>
+                        <div className="h-6 w-20 bg-white/10 rounded-md"></div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5"><div className="h-8 w-20 bg-white/10 rounded-md ml-auto"></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : error ? (
           <div className="p-12 text-center text-red-400 bg-red-500/10 font-medium">
@@ -159,7 +197,7 @@ export default function AdminDashboard() {
                           <Edit2 className="w-5 h-5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(problem._id, problem.title)}
+                          onClick={() => initiateDelete(problem._id, problem.title)}
                           className="p-2.5 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
                           title="Delete Problem"
                         >
@@ -188,6 +226,17 @@ export default function AdminDashboard() {
           onClose={handleEditorClose} 
         />
       )}
+
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Algorithm"
+        message={`Are you sure you want to completely erase "${deleteConfirm.title}" from the arena? This action cannot be undone.`}
+        confirmText="Delete Origin"
+        cancelText="Abort"
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+        danger={true}
+      />
     </div>
   );
 }

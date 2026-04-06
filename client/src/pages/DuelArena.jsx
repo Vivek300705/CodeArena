@@ -12,6 +12,8 @@ import { useSocket } from '../hooks/useSocket.js';
 import { useAuthStore } from '../store/useAuthStore.js';
 import ForgeButton from '../components/ForgeButton.jsx';
 import DifficultyBadge from '../components/DifficultyBadge.jsx';
+import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ui/ConfirmModal.jsx';
 
 const LANGUAGES = [
   { id: 'javascript', name: 'JavaScript (Node.js)' },
@@ -43,6 +45,8 @@ export default function DuelArena() {
   const [duelData, setDuelData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeProblemIndex, setActiveProblemIndex] = useState(0);
+  
+  const [cancelConfirm, setCancelConfirm] = useState(false);
 
   // Scoreboard state
   const [scores, setScores] = useState({});
@@ -117,7 +121,7 @@ export default function DuelArena() {
          problems: data.problems.map(p => ({ problem: p }))
        }));
     } else if (type === "duel_cancelled") {
-       alert("Matched has been cancelled.");
+       toast.error("Match has been cancelled.");
        navigate("/duel");
     }
   }, [navigate]);
@@ -189,13 +193,14 @@ export default function DuelArena() {
     }
   };
 
-  const handleCancelDuel = async () => {
-    if (!window.confirm("Abandon match and forfeit arena points?")) return;
+  const executeCancelDuel = async () => {
+    setCancelConfirm(false);
     try {
        await cancelDuel(id);
        navigate("/duel");
     } catch (err) {
        console.error(err);
+       toast.error("Failed to abort match.");
     }
   };
 
@@ -353,7 +358,7 @@ export default function DuelArena() {
           </div>
           
           <ForgeButton 
-            onClick={handleCancelDuel}
+            onClick={() => setCancelConfirm(true)}
             variant="secondary"
             className="flex items-center gap-2 px-4 py-1.5 border-[var(--forge-red)]/50 text-[var(--forge-red)] hover:bg-[var(--forge-red)]/10 hover:text-[var(--forge-red)] font-mono text-xs uppercase shadow-none"
           >
@@ -441,6 +446,17 @@ export default function DuelArena() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={cancelConfirm}
+        title="Abandon Match?"
+        message="Are you sure you want to abort your connection? You will forfeit arena points and lose the duel."
+        confirmText="Forfeit"
+        cancelText="Resume"
+        onConfirm={executeCancelDuel}
+        onCancel={() => setCancelConfirm(false)}
+        danger={true}
+      />
     </div>
   );
 }
