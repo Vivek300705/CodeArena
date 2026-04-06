@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,7 +35,7 @@ const VERDICT_STYLE = {
 };
 
 export default function DuelArena() {
-  useDocumentTitle('Duel Arena | CodeArena');
+  useSEO({ title: 'Duel', description: 'Battle against another coder in real-time.'});
   const { id } = useParams();
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();

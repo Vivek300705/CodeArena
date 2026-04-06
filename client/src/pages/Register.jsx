@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { authService } from '../services/authService.js';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { TypewriterSubtitle } from '../components/TypewriterSubtitle.jsx';
 
@@ -39,7 +39,7 @@ const registerSchema = z.object({
 });
 
 export default function Register() {
-  useDocumentTitle('Join the Arena | CodeArena');
+  useSEO({ title: 'Join the Arena', description: 'Create your account on CodeArena to challenge developers worldwide.'});
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
   const [unameStatus, setUnameStatus] = useState('idle'); // idle, checking, available, taken

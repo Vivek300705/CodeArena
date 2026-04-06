@@ -5,7 +5,7 @@ import { Code2, Target, CheckCircle, Clock, Loader2, Zap, Activity, ChevronRight
 import { Link } from 'react-router-dom';
 import { getSubmissions } from '../services/problemService.js';
 import { getMyRank } from '../services/leaderboardService.js';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import ForgeButton from '../components/ForgeButton.jsx';
 
 const LANG_DISPLAY = { python: 'Python', javascript: 'JS', node: 'Node.js', cpp: 'C++', c: 'C', java: 'Java', go: 'Go', rust: 'Rust' };
@@ -37,7 +37,7 @@ function ProgressRing({ value, max, size = 100, strokeWidth = 7, color = '#f9731
 }
 
 export default function Dashboard() {
-  useDocumentTitle('Command Center | CodeArena');
+  useSEO({ title: 'Command Center', description: 'Your personal CodeArena dashboard. Track your ELO, submissions, and recent performance.'});
   const user = useAuthStore((state) => state.user);
   const [submissions, setSubmissions] = useState([]);
   const [rankData, setRankData] = useState(null);

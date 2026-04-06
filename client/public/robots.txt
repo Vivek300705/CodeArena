@@ -2,6 +2,11 @@ User-agent: *
 Allow: /
 Allow: /problems
 Allow: /leaderboard
+Allow: /about
+Allow: /faq
+Allow: /privacy-policy
+Allow: /terms
+Allow: /contact
 Disallow: /admin
 Disallow: /duel/
 Disallow: /history

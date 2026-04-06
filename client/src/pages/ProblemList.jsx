@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { getProblems } from '../services/problemService.js';
@@ -42,7 +42,7 @@ function ProgressArc({ rate, color }) {
 }
 
 export default function ProblemList() {
-  useDocumentTitle('Problems | CodeArena');
+  useSEO({ title: 'Problems', description: 'Practice and solve algorithm problems to improve your coding skills on CodeArena.' });
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');

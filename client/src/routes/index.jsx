@@ -13,6 +13,11 @@ import ProtectedAdminRoute from '../components/ProtectedAdminRoute.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
 import DuelDashboard from '../pages/DuelDashboard.jsx';
 import DuelArena from '../pages/DuelArena.jsx';
+import PrivacyPolicy from '../pages/PrivacyPolicy.jsx';
+import Terms from '../pages/Terms.jsx';
+import AboutUs from '../pages/AboutUs.jsx';
+import FAQ from '../pages/FAQ.jsx';
+import Contact from '../pages/Contact.jsx';
 
 function NotFound() {
   return (
@@ -37,6 +42,11 @@ export const router = createBrowserRouter([
       { path: 'problems', element: <ProblemList /> },
       { path: 'problems/:id', element: <ProblemDetail /> },
       { path: 'leaderboard', element: <Leaderboard /> },
+      { path: 'privacy-policy', element: <PrivacyPolicy /> },
+      { path: 'terms', element: <Terms /> },
+      { path: 'about', element: <AboutUs /> },
+      { path: 'faq', element: <FAQ /> },
+      { path: 'contact', element: <Contact /> },
       {
         element: <ProtectedRoute />,
         children: [

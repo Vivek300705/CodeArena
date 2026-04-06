@@ -5,7 +5,7 @@ import Hero3D from '../components/Hero3D.jsx';
 import CountUp from '../components/CountUp.jsx';
 import ForgeCard from '../components/ForgeCard.jsx';
 import ForgeButton from '../components/ForgeButton.jsx';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 
 // Typewriter hook
 function useTypewriter(words, typeSpeed = 80, deleteSpeed = 50, delay = 2000) {
@@ -54,7 +54,11 @@ const leaderboard = [
 ];
 
 export default function Landing() {
-  useDocumentTitle('Home | CodeArena');
+  useSEO({
+    title: 'CodeArena | Real-Time 1v1 Coding Battles',
+    description: "Challenge developers worldwide in real-time coding battles. Climb the ELO leaderboard, get AI feedback, and sharpen your skills. Free to join.",
+    exact: true
+  });
   
   const typeText = useTypewriter([
     "FORGE YOUR SKILLS.",

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,7 +48,7 @@ export default function ProblemDetail() {
   
   const [activeTab, setActiveTab] = useState('description');
 
-  useDocumentTitle(problem ? `${problem.title} | CodeArena` : 'Forge');
+  useSEO({ title: problem ? problem.title : 'Forge', description: problem ? problem.description?.substring(0, 150) + '...' : 'Solve algorithms on CodeArena.' });
 
   const [language, setLanguage] = useState('javascript');
   const [code, setCode] = useState(DEFAULT_CODE['javascript']);
@@ -98,7 +98,7 @@ export default function ProblemDetail() {
           clearInterval(interval);
         }
       } catch (e) { /* ignore */ }
-    }, 2500);
+    }, 1000);
     return () => clearInterval(interval);
   }, [isSubmitting, submissionId]);
 
@@ -124,7 +124,7 @@ export default function ProblemDetail() {
       } else {
         clearInterval(interval);
       }
-    }, 400);
+    }, 100);
 
     return () => clearInterval(interval);
   }, [isSubmitting, language, problem]);

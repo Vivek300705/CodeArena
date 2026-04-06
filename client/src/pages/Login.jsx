@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { authService } from '../services/authService.js';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Github } from 'lucide-react';
 import { TypewriterSubtitle } from '../components/TypewriterSubtitle.jsx';
@@ -39,7 +39,7 @@ function IcosahedronMesh() {
 }
 
 export default function Login() {
-  useDocumentTitle('Log In | CodeArena');
+  useSEO({ title: 'Log In', description: 'Log in to CodeArena to access your command center and start dueling.'});
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

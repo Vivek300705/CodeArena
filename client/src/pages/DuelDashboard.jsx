@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { useNavigate } from 'react-router-dom';
 import { Swords, History, Play, Users, Clock, Trophy, ChevronRight, Zap, Shield, Target } from 'lucide-react';
 import { getDuelHistory, challengeUser, acceptChallenge } from '../services/duelService.js';
@@ -8,7 +8,7 @@ import ForgeButton from '../components/ForgeButton.jsx';
 import DifficultyBadge from '../components/DifficultyBadge.jsx';
 
 export default function DuelDashboard() {
-  useDocumentTitle('Duel Arena | CodeArena');
+  useSEO({ title: 'Duel Arena', description: 'Create or join a coding duel session.'});
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [challengeId, setChallengeId] = useState('');

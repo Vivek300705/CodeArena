@@ -5,8 +5,11 @@
   "main": "src/main.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/main.js",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:worker\"",
+    "dev:api": "nodemon src/main.js",
+    "dev:worker": "nodemon src/workers/submission.worker.js",
     "start": "node src/main.js",
+    "start:worker": "node src/workers/submission.worker.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."
@@ -36,6 +39,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",

@@ -6,14 +6,14 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { authService } from '../services/authService.js';
 import { Target, Mail, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 
 const forgotSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
 export default function ForgotPassword() {
-  useDocumentTitle('Forgot Password');
+  useSEO({ title: 'Forgot Password', description: 'Recover your CodeArena account password.'});
   const [status, setStatus] = useState({ type: '', message: '' });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
+import { useSEO } from '../hooks/useSEO.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Loader2, AlertCircle, RefreshCw, User, Star, Crown } from 'lucide-react';
 import { getLeaderboard, getMyRank } from '../services/leaderboardService.js';
@@ -21,7 +21,7 @@ const getRowStyle = (rank, isMe) => {
 };
 
 export default function Leaderboard() {
-  useDocumentTitle('Leaderboard | CodeArena');
+  useSEO({ title: 'Leaderboard', description: 'See the top competitive programmers on CodeArena.' });
   const [entries, setEntries] = useState([]);
   const [myRank, setMyRank] = useState(null);
   const [loading, setLoading] = useState(true);

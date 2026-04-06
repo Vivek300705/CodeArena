@@ -11,7 +11,7 @@ const LIST_TTL = 300;     // 5 minutes for paginated lists
 
 const problemKey = (id) => `problem:${id}`;
 const slugKey = (slug) => `problem:slug:${slug}`;
-const listKey = (query) => `problems:list:${JSON.stringify(query)}`;
+const listKey = (query) => `problems:list:v2:${JSON.stringify(query)}`;
 
 export const createProblem = async (req, res, next) => {
   try {
@@ -45,6 +45,7 @@ export const getProblems = async (req, res, next) => {
 
     const [problems, total] = await Promise.all([
       Problem.find(filter)
+        .select("-testcases -boilerplates -driverCode -examples -description")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
