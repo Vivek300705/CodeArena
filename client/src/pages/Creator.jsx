@@ -24,7 +24,7 @@ function WireframeShape({ type }) {
       {type === 'icosahedron' && <icosahedronGeometry args={[1.2]} />}
       {type === 'cylinder' && <cylinderGeometry args={[0.8, 0.8, 1.5, 12]} />}
       {type === 'torus' && <torusGeometry args={[0.8, 0.3, 16, 32]} />}
-      <meshBasicMaterial color="#0ea5e9" wireframe={true} transparent opacity={0.8} />
+      <meshBasicMaterial color="#FF6B35" wireframe={true} transparent opacity={0.8} />
     </mesh>
   );
 }
@@ -138,10 +138,10 @@ export default function Creator() {
         viewport={{ once: true, margin: "-50px" }}
         variants={sectionVariants}
       >
-        <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-2 tracking-tight" style={{ fontFamily: '"Space Grotesk", "Inter", sans-serif' }}>
+        <h2 className="text-4xl md:text-5xl font-bold text-center text-[var(--forge-white)] mb-2 tracking-tight" style={{ fontFamily: '"Space Grotesk", "Inter", sans-serif' }}>
           Engineered for Competition
         </h2>
-        <p className="text-[#0ea5e9] text-center mb-16 text-xl tracking-widest font-mono uppercase">
+        <p className="text-[var(--forge-ember)] text-center mb-16 text-xl tracking-widest font-mono uppercase drop-shadow-[0_0_8px_var(--forge-glow)]">
           eSport Coding Arena Architecture
         </p>
         
@@ -159,9 +159,9 @@ export default function Creator() {
           ].map((feature, i) => (
             <motion.div variants={itemVariants} key={i}>
               <TiltCard className="h-full" intensity={15} glare={true}>
-                <div className="relative h-full p-8 rounded-2xl bg-[#080d1a]/80 backdrop-blur-xl border border-white/5 hover:border-[#0ea5e9]/50 transition-colors duration-300 overflow-hidden group shadow-lg hover:shadow-[0_0_30px_rgba(14,165,233,0.15)] flex flex-col cursor-pointer">
-                  {/* Faint radial cyan glow from top right */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#0ea5e9] opacity-[0.15] group-hover:opacity-[0.3] transition-opacity duration-500 rounded-full blur-[40px] pointer-events-none"></div>
+                <div className="relative h-full p-8 rounded-2xl bg-[#080d1a]/80 backdrop-blur-xl border border-white/5 hover:border-[var(--forge-ember)] transition-colors duration-300 overflow-hidden group shadow-lg hover:shadow-[0_0_30px_var(--forge-glow)] flex flex-col cursor-pointer">
+                  {/* Faint radial ember glow from top right */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--forge-ember)] opacity-[0.10] group-hover:opacity-[0.25] transition-opacity duration-500 rounded-full blur-[40px] pointer-events-none"></div>
                   
                   {/* Wireframe display */}
                   <div className="w-[100px] h-[100px] mb-6 relative z-10 pointer-events-none">
