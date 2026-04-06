@@ -119,7 +119,7 @@ export default function ProblemEditor({ problem, onClose }) {
 
   return createPortal(
     <div
-      className="modal-overlay flex items-center justify-center bg-black/75"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4"
     >
       {/* Backdrop */}
       <div
