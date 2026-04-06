@@ -32,6 +32,7 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
+  role: z.enum(['admin', 'contestant']).default('contestant'),
   terms: z.literal(true, { errorMap: () => ({ message: "You must accept the terms" }) }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -50,6 +51,7 @@ export default function Register() {
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(registerSchema),
+    defaultValues: { role: 'contestant' }
   });
 
   const usernameVal = watch('username');
@@ -99,8 +101,6 @@ export default function Register() {
       setError('');
       setShake(false);
       const { confirmPassword, terms, ...registerData } = data;
-      // Default to contestant behind the scenes
-      registerData.role = 'contestant';
 
       const response = await authService.register(registerData);
       
@@ -276,6 +276,34 @@ export default function Register() {
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className={shake ? 'form-error' : ''}>
             
+            {/* Role Selection */}
+            <div style={{ position: 'relative', marginBottom: '28px' }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em',
+                color: '#FF6B35', marginBottom: '8px',
+                textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0'
+              }}>
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>⚙</span> ROLE
+              </label>
+              <div className="flex gap-4">
+                <label className="flex-1 cursor-pointer">
+                  <input type="radio" value="contestant" {...register('role')} className="peer sr-only" />
+                  <div className="py-3 text-center border border-[var(--forge-border)] rounded-md peer-checked:border-[var(--forge-ember)] peer-checked:bg-[rgba(255,107,53,0.1)] text-[var(--forge-steel)] peer-checked:text-[var(--forge-white)] font-mono text-sm tracking-wider transition-colors">
+                    CONTESTANT
+                  </div>
+                </label>
+                <label className="flex-1 cursor-pointer">
+                  <input type="radio" value="admin" {...register('role')} className="peer sr-only" />
+                  <div className="py-3 text-center border border-[var(--forge-border)] rounded-md peer-checked:border-[var(--forge-ember)] peer-checked:bg-[rgba(255,107,53,0.1)] text-[var(--forge-steel)] peer-checked:text-[var(--forge-white)] font-mono text-sm tracking-wider transition-colors">
+                    ADMIN
+                  </div>
+                </label>
+              </div>
+            </div>
+
             {/* Username Field */}
             <div style={{ position: 'relative', marginBottom: '28px' }}>
               <label style={{
