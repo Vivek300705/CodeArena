@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Github, Linkedin, Mail, Code, Server, Database, Layers, Trophy, Cpu, Zap, Activity, ExternalLink, Globe } from 'lucide-react';
+import { Github, Linkedin, Mail, Trophy, ExternalLink, Globe } from 'lucide-react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { useSEO } from '../hooks/useSEO.js';
 import ForgeCard from '../components/ForgeCard.jsx';
 import ForgeButton from '../components/ForgeButton.jsx';
+import TiltCard from '../components/ui/TiltCard.jsx';
+
+function WireframeShape({ type }) {
+  const meshRef = useRef(null);
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x += delta * 0.5;
+      meshRef.current.rotation.y += delta * 0.3;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef}>
+      {type === 'cube' && <boxGeometry args={[1.5, 1.5, 1.5]} />}
+      {type === 'octahedron' && <octahedronGeometry args={[1.2]} />}
+      {type === 'cone' && <coneGeometry args={[1, 1.5, 8]} />}
+      {type === 'icosahedron' && <icosahedronGeometry args={[1.2]} />}
+      {type === 'cylinder' && <cylinderGeometry args={[0.8, 0.8, 1.5, 12]} />}
+      {type === 'torus' && <torusGeometry args={[0.8, 0.3, 16, 32]} />}
+      <meshBasicMaterial color="#0ea5e9" wireframe={true} transparent opacity={0.8} />
+    </mesh>
+  );
+}
 
 export default function Creator() {
   useSEO({
@@ -106,69 +130,56 @@ export default function Creator() {
         </div>
       </motion.section>
 
-      {/* SECTION 3 - Tech Breakdown */}
+      {/* SECTION 3 - Engineered for Competition */}
       <motion.section 
-        className="max-w-6xl mx-auto px-6 mb-24"
+        className="max-w-6xl mx-auto px-6 mb-24 relative z-20"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
         variants={sectionVariants}
       >
-        <h2 className="text-3xl md:text-4xl font-bold font-display text-center text-[var(--forge-white)] mb-12">
-          What I Built <span className="text-[var(--forge-steel)] text-xl block mt-2 font-mono uppercase tracking-widest">Platform Breakdown</span>
+        <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-2 tracking-tight" style={{ fontFamily: '"Space Grotesk", "Inter", sans-serif' }}>
+          Engineered for Competition
         </h2>
+        <p className="text-[#0ea5e9] text-center mb-16 text-xl tracking-widest font-mono uppercase">
+          eSport Coding Arena Architecture
+        </p>
         
         <motion.div 
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
           variants={containerVariants}
         >
-          <motion.div variants={itemVariants}>
-            <ForgeCard className="p-6 h-full border-t-2 border-t-[var(--forge-ember)] hover:-translate-y-2 transition-transform">
-              <Code className="text-[var(--forge-ember)] mb-4" size={32} />
-              <h3 className="text-xl font-bold font-display text-[var(--forge-white)] mb-3">The Arena</h3>
-              <p className="text-[var(--forge-steel)] text-sm leading-relaxed">1,000+ algorithm problems integrated directly into a real-time 1v1 duel system for head-to-head competition.</p>
-            </ForgeCard>
-          </motion.div>
+          {[
+            { shape: 'cube', title: 'The Arena', desc: '1,000+ algorithm problems integrated directly into a real-time 1v1 duel system for head-to-head competition.' },
+            { shape: 'octahedron', title: 'ELO System', desc: 'Competitive matchmaking with ELO rating, powerups, and a dynamic global leaderboard.' },
+            { shape: 'cone', title: 'Isolated Judge', desc: 'Multi-language code judge for C++, Python, Java, Go, and Rust — executing securely inside isolated Docker sandboxes.' },
+            { shape: 'icosahedron', title: 'Real-time Engine', desc: 'Battle event synchronization using Socket.io and high-throughput async submission handling via BullMQ.' },
+            { shape: 'torus', title: 'Cinematic UI', desc: '3D interactive frontend crafted with Three.js particle fields, Framer Motion animations, and custom cursor elements.' },
+            { shape: 'cylinder', title: 'DevOps & Scale', desc: 'Nginx reverse proxy with WebSocket support, scaled via PM2/Docker Compose. p95 latency under 500ms validated by k6.' }
+          ].map((feature, i) => (
+            <motion.div variants={itemVariants} key={i}>
+              <TiltCard className="h-full" intensity={15} glare={true}>
+                <div className="relative h-full p-8 rounded-2xl bg-[#080d1a]/80 backdrop-blur-xl border border-white/5 hover:border-[#0ea5e9]/50 transition-colors duration-300 overflow-hidden group shadow-lg hover:shadow-[0_0_30px_rgba(14,165,233,0.15)] flex flex-col cursor-pointer">
+                  {/* Faint radial cyan glow from top right */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#0ea5e9] opacity-[0.15] group-hover:opacity-[0.3] transition-opacity duration-500 rounded-full blur-[40px] pointer-events-none"></div>
+                  
+                  {/* Wireframe display */}
+                  <div className="w-[100px] h-[100px] mb-6 relative z-10 pointer-events-none">
+                    <Canvas camera={{ position: [0, 0, 4.5], fov: 50 }}>
+                      <ambientLight intensity={0.5} />
+                      <WireframeShape type={feature.shape} />
+                    </Canvas>
+                  </div>
 
-          <motion.div variants={itemVariants}>
-            <ForgeCard className="p-6 h-full border-t-2 border-t-[var(--forge-gold)] hover:-translate-y-2 transition-transform">
-              <Activity className="text-[var(--forge-gold)] mb-4" size={32} />
-              <h3 className="text-xl font-bold font-display text-[var(--forge-white)] mb-3">ELO System</h3>
-              <p className="text-[var(--forge-steel)] text-sm leading-relaxed">Competitive matchmaking with ELO rating, powerups, and a dynamic global leaderboard.</p>
-            </ForgeCard>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <ForgeCard className="p-6 h-full border-t-2 border-t-[#3178c6] hover:-translate-y-2 transition-transform">
-              <Cpu className="text-[#3178c6] mb-4" size={32} />
-              <h3 className="text-xl font-bold font-display text-[var(--forge-white)] mb-3">Isolated Judge</h3>
-              <p className="text-[var(--forge-steel)] text-sm leading-relaxed">Multi-language code judge for C++, Python, Java, Go, and Rust — executing securely inside isolated Docker sandboxes.</p>
-            </ForgeCard>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <ForgeCard className="p-6 h-full border-t-2 border-t-[var(--forge-green)] hover:-translate-y-2 transition-transform">
-              <Zap className="text-[var(--forge-green)] mb-4" size={32} />
-              <h3 className="text-xl font-bold font-display text-[var(--forge-white)] mb-3">Real-time Engine</h3>
-              <p className="text-[var(--forge-steel)] text-sm leading-relaxed">Battle event synchronization using Socket.io and high-throughput async submission handling via BullMQ.</p>
-            </ForgeCard>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <ForgeCard className="p-6 h-full border-t-2 border-t-[#9b59b6] hover:-translate-y-2 transition-transform">
-              <Layers className="text-[#9b59b6] mb-4" size={32} />
-              <h3 className="text-xl font-bold font-display text-[var(--forge-white)] mb-3">Cinematic UI</h3>
-              <p className="text-[var(--forge-steel)] text-sm leading-relaxed">3D interactive frontend crafted with Three.js particle fields, Framer Motion animations, and custom cursor elements.</p>
-            </ForgeCard>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <ForgeCard className="p-6 h-full border-t-2 border-t-[#e74c3c] hover:-translate-y-2 transition-transform">
-              <Server className="text-[#e74c3c] mb-4" size={32} />
-              <h3 className="text-xl font-bold font-display text-[var(--forge-white)] mb-3">DevOps & Scale</h3>
-              <p className="text-[var(--forge-steel)] text-sm leading-relaxed">Nginx reverse proxy with WebSocket support, scaled via PM2/Docker Compose. p95 latency under 500ms validated by k6.</p>
-            </ForgeCard>
-          </motion.div>
+                  {/* Text Content */}
+                  <div className="relative z-10 flex-grow pt-2 pointer-events-none">
+                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">{feature.title}</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">{feature.desc}</p>
+                  </div>
+                </div>
+              </TiltCard>
+            </motion.div>
+          ))}
         </motion.div>
       </motion.section>
 
