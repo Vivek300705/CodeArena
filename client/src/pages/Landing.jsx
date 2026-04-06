@@ -276,16 +276,6 @@ export default function Landing() {
           </Link>
         </div>
       </section>
-      
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-[var(--forge-border)] py-8 text-center bg-[var(--forge-bg)]">
-        <div className="flex items-center justify-center gap-2 mb-2 font-display">
-          <span className="font-black text-[var(--forge-white)] tracking-widest uppercase">
-            <span className="text-[var(--forge-ember)]">&lt;/&gt;</span> FORGE
-          </span>
-        </div>
-        <p className="text-[var(--forge-dim)] font-mono text-xs uppercase tracking-widest">© {new Date().getFullYear()} CODEARENA</p>
-      </footer>
     </div>
   );
 }

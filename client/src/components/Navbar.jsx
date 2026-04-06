@@ -9,6 +9,7 @@ const navLinks = [
   { to: '/problems', label: 'Problems', authRequired: false },
   { to: '/leaderboard', label: 'Leaderboard', authRequired: false },
   { to: '/history', label: 'History', authRequired: true },
+  { to: '/about', label: 'About', authRequired: false },
 ];
 
 export default function Navbar() {
