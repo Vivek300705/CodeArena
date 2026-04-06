@@ -8,6 +8,7 @@ import ProblemList from '../pages/ProblemList.jsx';
 import ProblemDetail from '../pages/ProblemDetail.jsx';
 import SubmissionHistory from '../pages/SubmissionHistory.jsx';
 import Leaderboard from '../pages/Leaderboard.jsx';
+import Creator from '../pages/Creator.jsx';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 import ProtectedAdminRoute from '../components/ProtectedAdminRoute.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
       { path: 'problems', element: <ProblemList /> },
       { path: 'problems/:id', element: <ProblemDetail /> },
       { path: 'leaderboard', element: <Leaderboard /> },
+      { path: 'creator', element: <Creator /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms', element: <Terms /> },
       { path: 'about', element: <AboutUs /> },

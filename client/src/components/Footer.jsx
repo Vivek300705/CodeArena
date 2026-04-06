@@ -31,6 +31,7 @@ export default function Footer() {
         <div className="flex flex-col gap-3 text-center md:text-left">
           <h4 className="font-bold text-[var(--forge-steel)] uppercase tracking-wider mb-2">CodeArena</h4>
           <Link to="/about" className="text-sm font-mono text-[var(--forge-dim)] hover:text-[var(--forge-ember)] transition-colors">About Us</Link>
+          <Link to="/creator" className="text-sm font-mono text-[var(--forge-dim)] hover:text-[var(--forge-ember)] transition-colors">Meet the Creator</Link>
           <Link to="/faq" className="text-sm font-mono text-[var(--forge-dim)] hover:text-[var(--forge-ember)] transition-colors">FAQ</Link>
           <Link to="/contact" className="text-sm font-mono text-[var(--forge-dim)] hover:text-[var(--forge-ember)] transition-colors">Contact</Link>
         </div>
@@ -44,9 +45,12 @@ export default function Footer() {
 
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-[var(--forge-border)] flex flex-col items-center">
+      <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-[var(--forge-border)] flex flex-col items-center gap-2">
         <p className="text-[var(--forge-dim)] font-mono text-xs uppercase tracking-widest text-center">
           © {new Date().getFullYear()} CODEARENA. ALL RIGHTS RESERVED.
+        </p>
+        <p className="text-[var(--forge-dim)] font-mono text-[10px] tracking-widest text-center mt-2">
+          BUILT BY <Link to="/creator" className="text-[var(--forge-steel)] hover:text-[var(--forge-ember)] transition-colors font-bold">VIVEK KUMAR SULANIYA</Link>
         </p>
       </div>
     </footer>

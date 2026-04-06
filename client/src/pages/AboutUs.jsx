@@ -113,6 +113,22 @@ export default function AboutUs() {
         </p>
       </section>
 
+      {/* The Developer Behind CodeArena */}
+      <section className="max-w-4xl mx-auto px-6 mb-24">
+        <div className="p-8 md:p-10 border border-[var(--forge-border)] rounded-xl bg-[var(--forge-surface)] flex flex-col items-center text-center shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--forge-ember)] blur-[120px] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+          <h2 className="text-3xl font-bold font-display text-[var(--forge-white)] mb-6 relative z-10">The Developer Behind CodeArena</h2>
+          <p className="text-lg text-[var(--forge-steel)] leading-relaxed font-mono md:w-4/5 mx-auto mb-8 relative z-10">
+            CodeArena was built solo by Vivek Kumar Sulaniya, a Full Stack Developer and competitive programmer from NIT Allahabad. What started as a personal frustration with solo coding practice turned into a production platform used by developers worldwide.
+          </p>
+          <Link to="/creator" className="relative z-10">
+            <ForgeButton variant="outline" className="flex items-center gap-2 group-hover:border-[var(--forge-ember)] group-hover:text-[var(--forge-ember)] transition-colors">
+              Meet the Creator <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </ForgeButton>
+          </Link>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="text-center px-6">
         <Link to="/register">
