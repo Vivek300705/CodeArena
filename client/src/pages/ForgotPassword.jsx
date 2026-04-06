@@ -1,20 +1,92 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService.js';
-import { Target, Mail, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO.js';
+import { Canvas, useFrame } from '@react-three/fiber';
 
+// ── Forge Schemas ─────────────────────────────────────────────
 const forgotSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export default function ForgotPassword() {
-  useSEO({ title: 'Forgot Password', description: 'Recover your CodeArena account password.'});
-  const [status, setStatus] = useState({ type: '', message: '' });
+const resetSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirm: z.string(),
+}).refine((d) => d.password === d.confirm, {
+  message: "Passwords don't match",
+  path: ['confirm'],
+});
+
+// ── 3D Wireframe ──────────────────────────────────────────────
+function OctahedronMesh() {
+  const meshRef = useRef();
+  useFrame((_, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.08;
+      meshRef.current.rotation.z += delta * 0.04;
+    }
+  });
+  return (
+    <mesh ref={meshRef} position={[0, 0, 0]} scale={2.6}>
+      <octahedronGeometry args={[1, 0]} />
+      <meshBasicMaterial color="#FF6B35" wireframe transparent opacity={0.12} />
+    </mesh>
+  );
+}
+
+// ── Left Panel shared between both forms ──────────────────────
+function LeftPanel({ subtitle }) {
+  return (
+    <div className="hidden lg:flex flex-col relative w-[55%] border-r border-[var(--forge-ember)] shadow-[1px_0_12px_var(--forge-glow)]">
+      <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+        <span className="font-display font-black text-[30vw] tracking-tighter leading-none">&lt;/&gt;</span>
+      </div>
+      <div className="absolute inset-0 z-0">
+        <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+          <ambientLight intensity={0.5} />
+          <OctahedronMesh />
+        </Canvas>
+      </div>
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 2, pointerEvents: 'none',
+        textAlign: 'center', display: 'flex',
+        flexDirection: 'column', alignItems: 'center', gap: '16px',
+      }}>
+        <div style={{
+          fontFamily: "'Orbitron', monospace", fontWeight: '900',
+          fontSize: 'clamp(48px, 7vw, 80px)', color: '#FF6B35', lineHeight: 1,
+          textShadow: '0 0 20px rgba(255,107,53,0.8), 0 0 50px rgba(255,107,53,0.4)',
+          animation: 'ember-pulse 2.5s ease-in-out infinite',
+        }}>{'</>'}</div>
+        <div style={{
+          fontFamily: "'Orbitron', monospace", fontWeight: '900',
+          fontSize: 'clamp(28px, 4vw, 52px)', color: '#E8EFF5',
+          letterSpacing: '0.2em', textTransform: 'uppercase',
+        }}>CODEARENA</div>
+        <div style={{ width: '60px', height: '2px', background: 'linear-gradient(90deg, transparent, #FF6B35, transparent)', borderRadius: '1px' }} />
+        <div style={{
+          fontFamily: "'Space Mono', monospace", fontSize: 'clamp(10px, 1.2vw, 13px)',
+          color: '#4A6070', letterSpacing: '0.3em', textTransform: 'uppercase',
+        }}>FORGE · COMPETE · CONQUER</div>
+      </div>
+      <div className="absolute bottom-12 left-12 z-10">
+        <p className="text-[var(--forge-dim)] font-ui italic text-sm tracking-wide">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── FORGOT PASSWORD FORM ──────────────────────────────────────
+function ForgotForm() {
+  useSEO({ title: 'Forgot Password', description: 'Reset your CodeArena account password.' });
+  const [status, setStatus] = useState(null); // null | 'success' | 'error'
+  const [message, setMessage] = useState('');
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(forgotSchema),
@@ -22,95 +94,205 @@ export default function ForgotPassword() {
 
   const onSubmit = async (data) => {
     try {
-      setStatus({ type: '', message: '' });
+      setStatus(null);
       await authService.forgotPassword(data.email);
-      setStatus({ type: 'success', message: 'If an account exists, a reset link has been sent.' });
+      setStatus('success');
+      setMessage('If that email exists in our system, a reset link has been dispatched.');
     } catch (err) {
-      // In a real app we might not want to reveal if an email exists
-      // but for UX showing an error is fine.
-      setStatus({ type: 'error', message: err.response?.data?.error || 'Failed to send reset email.' });
+      setStatus('error');
+      setMessage(err.response?.data?.message || 'Something went wrong. Try again.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(2,3,12,0.95), rgba(2,3,12,1))' }}>
-      {/* Ambient glowing */}
-      <div className="absolute inset-0 cyber-grid opacity-30 pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,245,255,0.08) 0%, transparent 60%)' }} />
+    <div className="min-h-screen flex bg-[#020202] font-ui overflow-hidden text-[var(--forge-white)]">
+      <LeftPanel subtitle='"Every password can be reset. Every comeback is earned."' />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-        className="relative z-10 w-full max-w-md p-8 md:p-10 rounded-2xl border border-white/5"
-        style={{ background: 'rgba(5,5,15,0.95)', backdropFilter: 'blur(30px)', boxShadow: '0 20px 80px rgba(0,0,0,0.8)' }}
-      >
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/40 to-transparent" />
+      <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-20 relative z-10" style={{ background: '#0F1317', borderLeft: '1px solid #1E2832' }}>
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-md mx-auto"
+        >
+          <div className="mb-2 flex items-baseline gap-2">
+            <span className="text-[var(--forge-ember)] font-black text-2xl font-display tracking-tight">&lt;/&gt;</span>
+            <span className="text-[var(--forge-white)] font-black text-2xl font-display tracking-widest uppercase">CODEARENA</span>
+          </div>
+          <h1 className="forge-heading" data-text="RESET ACCESS">RESET ACCESS</h1>
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', color: '#4A6070', marginBottom: '32px', textTransform: 'uppercase' }}>
+            Enter your email to receive a secure reset link.
+          </p>
 
-        <div className="flex justify-center mb-8">
-          <Link to="/" className="flex items-center gap-2">
-            <Target className="w-8 h-8 text-neon-cyan" style={{ filter: 'drop-shadow(0 0 10px rgba(0,245,255,0.5))' }} />
-            <span className="text-2xl font-black font-display text-white">Code<span className="text-neon-cyan">Arena</span></span>
-          </Link>
-        </div>
+          <AnimatePresence>
+            {status === 'success' && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="mb-6 p-4 bg-[#0A1A12] border-l-2 border-[var(--forge-green)] text-[var(--forge-green)] text-xs font-mono uppercase tracking-widest"
+              >
+                [SIGNAL_SENT] {message}
+              </motion.div>
+            )}
+            {status === 'error' && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="mb-6 p-3 bg-[#1A1010] border-l-2 border-[var(--forge-red)] text-[var(--forge-red)] text-xs font-mono uppercase tracking-widest"
+              >
+                [SYS_ERR] {message}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <h1 className="text-2xl font-black font-display text-white mb-2 text-center">Reset Password</h1>
-        <p className="text-zinc-500 text-sm text-center mb-8">Enter your email and we will send you instructions to reset your password.</p>
-
-        {status.message && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-            className={`p-4 rounded-xl mb-6 flex items-start gap-3 border ${status.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
-          >
-            {status.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-            <span className="text-sm font-medium">{status.message}</span>
-          </motion.div>
-        )}
-
-        {status.type !== 'success' && (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Email Address</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-neon-cyan transition-colors">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <input
-                  type="email"
-                  {...register('email')}
-                  className="input-glow w-full pl-10"
-                  placeholder="hacker@matrix.com"
-                />
-              </div>
-              {errors.email && <p className="text-red-400 text-xs mt-1 ml-1">{errors.email.message}</p>}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div style={{ position: 'relative', marginBottom: '28px' }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em', color: '#FF6B35',
+                marginBottom: '8px', textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0',
+              }}>
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>◈</span> EMAIL
+              </label>
+              <input
+                {...register('email')}
+                type="email"
+                className="forge-input"
+                placeholder="> your@example.com"
+              />
+              {errors.email && <p className="mt-2 text-[10px] text-[var(--forge-red)] font-mono uppercase tracking-wider">✗ {errors.email.message}</p>}
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-shimmer w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-[#03030a] mt-2 disabled:opacity-70"
-              style={{ background: 'linear-gradient(135deg, #00eeff, #60a5fa)', boxShadow: '0 0 20px rgba(0,245,255,0.2)' }}
-            >
-              {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-[#03030a]/30 border-t-[#03030a] rounded-full animate-spin" />
-              ) : (
-                <>Send Reset Link <ArrowRight className="w-4 h-4" /></>
-              )}
+            <button type="submit" disabled={isSubmitting || status === 'success'} className="btn-submit">
+              {isSubmitting ? 'DISPATCHING...' : '⚡ SEND RESET LINK'}
             </button>
           </form>
-        )}
 
-        <div className="mt-8 text-center border-t border-white/5 pt-6">
-          <p className="text-sm text-zinc-500">
-            Remember your password?{' '}
-            <Link to="/login" className="text-white hover:text-neon-cyan transition-colors font-bold">
-              Log in
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', color: '#4A6070', textAlign: 'center', marginTop: '24px' }}>
+            REMEMBERED YOUR CREDENTIALS?{' '}
+            <Link to="/login" style={{ color: '#FF6B35', textDecoration: 'none', fontWeight: '700' }}>
+              [ LOGIN → ]
             </Link>
           </p>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
+}
+
+// ── RESET PASSWORD FORM ───────────────────────────────────────
+function ResetForm() {
+  useSEO({ title: 'Set New Password', description: 'Create a new password for your CodeArena account.' });
+  const { token } = useParams();
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(resetSchema),
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      setError('');
+      await authService.resetPassword(token, data.password);
+      navigate('/login', { state: { message: 'Password reset successful. Welcome back.' } });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Reset failed. The link may have expired.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex bg-[#020202] font-ui overflow-hidden text-[var(--forge-white)]">
+      <LeftPanel subtitle='"A new key. A new beginning."' />
+
+      <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-20 relative z-10" style={{ background: '#0F1317', borderLeft: '1px solid #1E2832' }}>
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-md mx-auto"
+        >
+          <div className="mb-2 flex items-baseline gap-2">
+            <span className="text-[var(--forge-ember)] font-black text-2xl font-display tracking-tight">&lt;/&gt;</span>
+            <span className="text-[var(--forge-white)] font-black text-2xl font-display tracking-widest uppercase">CODEARENA</span>
+          </div>
+          <h1 className="forge-heading" data-text="NEW PASSWORD">NEW PASSWORD</h1>
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', color: '#4A6070', marginBottom: '32px', textTransform: 'uppercase' }}>
+            Choose a strong new password for your account.
+          </p>
+
+          {error && (
+            <div className="mb-6 p-3 bg-[#1A1010] border-l-2 border-[var(--forge-red)] text-[var(--forge-red)] text-xs font-mono uppercase tracking-widest">
+              [SYS_ERR] {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div style={{ position: 'relative', marginBottom: '28px' }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em', color: '#FF6B35',
+                marginBottom: '8px', textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0',
+              }}>
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>⬡</span> NEW PASSWORD
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  {...register('password')}
+                  type={showPassword ? 'text' : 'password'}
+                  className="forge-input"
+                  placeholder="> ••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: showPassword ? '#FF6B35' : '#4A6070',
+                    fontSize: '16px', cursor: 'pointer', padding: '0', lineHeight: 1, transition: 'color 0.2s',
+                  }}
+                  tabIndex="-1"
+                >
+                  {showPassword ? '◉' : '◎'}
+                </button>
+              </div>
+              {errors.password && <p className="mt-2 text-[10px] text-[var(--forge-red)] font-mono uppercase tracking-wider">✗ {errors.password.message}</p>}
+            </div>
+
+            <div style={{ position: 'relative', marginBottom: '28px' }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: "'Orbitron', monospace", fontSize: '10px',
+                fontWeight: '700', letterSpacing: '0.25em', color: '#FF6B35',
+                marginBottom: '8px', textShadow: '0 0 10px rgba(255,107,53,0.4)',
+                position: 'absolute', top: '-24px', left: '0',
+              }}>
+                <span style={{ color: '#FF6B35', fontSize: '12px' }}>◈</span> CONFIRM PASSWORD
+              </label>
+              <input
+                {...register('confirm')}
+                type={showPassword ? 'text' : 'password'}
+                className="forge-input"
+                placeholder="> ••••••••"
+              />
+              {errors.confirm && <p className="mt-2 text-[10px] text-[var(--forge-red)] font-mono uppercase tracking-wider">✗ {errors.confirm.message}</p>}
+            </div>
+
+            <button type="submit" disabled={isSubmitting} className="btn-submit">
+              {isSubmitting ? 'FORGING NEW KEY...' : '⚡ SET NEW PASSWORD'}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ── Default export — render based on whether token present ────
+export default function ForgotPassword() {
+  const { token } = useParams();
+  return token ? <ResetForm /> : <ForgotForm />;
 }

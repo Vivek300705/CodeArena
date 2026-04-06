@@ -19,6 +19,7 @@ import Terms from '../pages/Terms.jsx';
 import AboutUs from '../pages/AboutUs.jsx';
 import FAQ from '../pages/FAQ.jsx';
 import Contact from '../pages/Contact.jsx';
+import ForgotPassword from '../pages/ForgotPassword.jsx';
 
 function NotFound() {
   return (
@@ -49,6 +50,8 @@ export const router = createBrowserRouter([
       { path: 'about', element: <AboutUs /> },
       { path: 'faq', element: <FAQ /> },
       { path: 'contact', element: <Contact /> },
+      { path: 'forgot-password', element: <ForgotPassword /> },
+      { path: 'reset-password/:token', element: <ForgotPassword /> },
       {
         element: <ProtectedRoute />,
         children: [
