@@ -3,8 +3,11 @@ import { router } from './routes';
 import { Toaster } from 'react-hot-toast';
 import { useSocket } from './hooks/useSocket.js';
 import Chatbot from './components/Chatbot';
+import { useAuthStore } from './store/useAuthStore.js';
 
 function App() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   // Initialise the WebSocket connection for the logged-in user.
   // The hook handles connect, reconnect, and disconnect automatically.
   useSocket();
@@ -33,7 +36,7 @@ function App() {
         }}
       />
       <RouterProvider router={router} />
-      <Chatbot />
+      {isAuthenticated && <Chatbot />}
     </>
   );
 }
