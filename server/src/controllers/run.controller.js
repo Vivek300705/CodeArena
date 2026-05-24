@@ -31,12 +31,12 @@ export const runCode = async (req, res, next) => {
     return res.status(404).json({ success: false, message: "Problem not found." });
   }
 
-  // Use visible examples for the RUN feature
-  const examples = problem.examples || [];
+  // Use visible testcases for the RUN feature
+  const examples = problem.testcases?.filter(tc => !tc.isHidden) || [];
   if (examples.length === 0) {
     return res.status(400).json({
       success: false,
-      message: "This problem has no example test cases to run against.",
+      message: "This problem has no visible test cases to run against.",
     });
   }
 
