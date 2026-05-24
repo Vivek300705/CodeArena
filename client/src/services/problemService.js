@@ -26,6 +26,15 @@ export const submitCode = async ({ problemId, code, language }) => {
 };
 
 /**
+ * Run code against visible example test cases — POST /api/v1/submissions/run
+ * Returns synchronous results (no BullMQ queue)
+ */
+export const runCode = async ({ problemId, code, language }) => {
+  const res = await api.post('/api/v1/submissions/run', { problemId, code, language });
+  return res.data;
+};
+
+/**
  * Fetch all submissions for the logged-in user — GET /api/v1/submissions
  */
 export const getSubmissions = async () => {

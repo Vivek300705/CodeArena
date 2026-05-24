@@ -278,6 +278,23 @@ async function boot() {
               return { verdict: "Accepted", error: null, time: Date.now() - start };
             } catch (execError) {
               const actualError = execError.stderr || execError.stdout || execError.message;
+              
+              // Detect Docker connection failures
+              const isDockerError =
+                actualError.includes("npipe") ||
+                (actualError.includes("docker") && actualError.includes("connect")) ||
+                actualError.includes("Cannot connect to the Docker daemon") ||
+                actualError.includes("docker.sock") ||
+                actualError.includes("pipe/dockerDesktop");
+
+              if (isDockerError) {
+                return { 
+                  verdict: "Runtime Error", 
+                  error: "Code execution engine (Docker) is not available. Please ensure Docker Desktop is running.", 
+                  time: Date.now() - start 
+                };
+              }
+
               const verdict = execError.code === 124 ? "Time Limit Exceeded" : "Runtime Error";
               return { verdict, error: actualError ? actualError.substring(0, 1000) : "Unknown Error", time: Date.now() - start };
             }

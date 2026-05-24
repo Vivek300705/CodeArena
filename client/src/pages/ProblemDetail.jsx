@@ -7,7 +7,7 @@ import {
   Play, Send, Clock, Cpu, ChevronLeft,
   CheckCircle, XCircle, AlertCircle, Code2, Terminal, Loader2, GitCommit, FileText, Check
 } from 'lucide-react';
-import { getProblemById, submitCode, getSubmissionById } from '../services/problemService.js';
+import { getProblemById, submitCode, getSubmissionById, runCode } from '../services/problemService.js';
 import { useSocket } from '../hooks/useSocket.js';
 import DifficultyBadge from '../components/DifficultyBadge.jsx';
 import ForgeButton from '../components/ForgeButton.jsx';
@@ -61,6 +61,12 @@ export default function ProblemDetail() {
   const [verdict, setVerdict] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [traceLines, setTraceLines] = useState([]);
+
+  // RUN state
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResults, setRunResults] = useState(null);
+  const [runError, setRunError] = useState(null);
+  const [showRunPanel, setShowRunPanel] = useState(false);
 
   useEffect(() => {
     setProblemLoading(true);
@@ -168,6 +174,35 @@ export default function ProblemDetail() {
     } catch (err) {
       setSubmitError(err.response?.data?.message || 'Transmission failed. Engine overloaded.');
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRun = async () => {
+    if (!problem) return;
+    setIsRunning(true);
+    setRunResults(null);
+    setRunError(null);
+    setShowRunPanel(true);
+    try {
+      const result = await runCode({
+        problemId: problem._id,
+        code,
+        language: language === 'javascript' ? 'node' : language,
+      });
+      if (result.success) {
+        setRunResults(result.data);
+      } else {
+        setRunError(result.message || 'Run failed.');
+      }
+    } catch (err) {
+      const errData = err.response?.data;
+      if (errData?.dockerError) {
+        setRunError('Code execution engine (Docker) is not available. Please ensure Docker Desktop is running.');
+      } else {
+        setRunError(errData?.message || 'Run failed. Engine overloaded.');
+      }
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -383,11 +418,12 @@ export default function ProblemDetail() {
           
           <div className="flex gap-3">
             <ForgeButton 
-              disabled={isSubmitting || problemLoading}
+              onClick={handleRun}
+              disabled={isRunning || isSubmitting || problemLoading}
               variant="secondary"
-              className="px-6 py-2 border-[var(--forge-border)] text-[var(--forge-steel)] hover:text-white"
+              className="px-6 py-2 border-[var(--forge-border)] text-[var(--forge-steel)] hover:text-white flex items-center gap-2"
             >
-              [ RUN ]
+              {isRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} [ RUN ]
             </ForgeButton>
             <ForgeButton 
               onClick={handleSubmit}
@@ -400,30 +436,137 @@ export default function ProblemDetail() {
           </div>
         </div>
 
-        {/* Monaco Workspace */}
-        <div className="flex-1 relative">
-          <Editor
-            height="100%"
-            language={language}
-            theme="vs-dark"
-            value={code}
-            onChange={(value) => setCode(value)}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 15,
-              fontFamily: "'Space Mono', 'Fira Code', monospace",
-              fontLigatures: true,
-              lineHeight: 26,
-              padding: { top: 24, bottom: 24 },
-              scrollBeyondLastLine: false,
-              smoothScrolling: true,
-              cursorBlinking: 'smooth',
-              cursorWidth: 3,
-              renderLineHighlight: 'all',
-              wordWrap: 'on'
-            }}
-            loading={<div className="flex items-center justify-center h-full text-[var(--forge-dim)] font-mono animate-pulse">Initializing editor engine...</div>}
-          />
+        {/* Monaco Workspace + Run Results Panel */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className={`relative ${showRunPanel ? 'flex-1 min-h-0' : 'flex-1'}`} style={{ flexBasis: showRunPanel ? '60%' : '100%' }}>
+            <Editor
+              height="100%"
+              language={language}
+              theme="vs-dark"
+              value={code}
+              onChange={(value) => setCode(value)}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 15,
+                fontFamily: "'Space Mono', 'Fira Code', monospace",
+                fontLigatures: true,
+                lineHeight: 26,
+                padding: { top: 24, bottom: 24 },
+                scrollBeyondLastLine: false,
+                smoothScrolling: true,
+                cursorBlinking: 'smooth',
+                cursorWidth: 3,
+                renderLineHighlight: 'all',
+                wordWrap: 'on'
+              }}
+              loading={<div className="flex items-center justify-center h-full text-[var(--forge-dim)] font-mono animate-pulse">Initializing editor engine...</div>}
+            />
+          </div>
+
+          {/* Run Results Panel */}
+          <AnimatePresence>
+            {showRunPanel && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: '40%', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="border-t border-[var(--forge-border)] bg-[var(--forge-panel)] overflow-hidden flex flex-col"
+              >
+                {/* Panel Header */}
+                <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--forge-border)] bg-[var(--forge-bg)] shrink-0">
+                  <div className="flex items-center gap-3">
+                    <Terminal className="w-4 h-4 text-[var(--forge-ember)]" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--forge-white)]">
+                      Test Results
+                    </span>
+                    {runResults && (
+                      <span className={`text-xs font-mono px-2 py-0.5 rounded ${runResults.allPassed ? 'bg-[var(--forge-green)]/20 text-[var(--forge-green)]' : 'bg-[var(--forge-red)]/20 text-[var(--forge-red)]'}`}>
+                        {runResults.testcasesPassed}/{runResults.totalTestcases} passed
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowRunPanel(false)}
+                    className="text-[var(--forge-steel)] hover:text-[var(--forge-white)] text-lg font-bold transition-colors px-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Panel Content */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                  {isRunning && (
+                    <div className="flex items-center gap-3 text-[var(--forge-ember)] p-4 border border-[var(--forge-ember)]/30 bg-[var(--forge-ember)]/10">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="font-bold tracking-widest uppercase text-sm font-mono">Running against example test cases...</span>
+                    </div>
+                  )}
+
+                  {runError && (
+                    <div className="p-4 border border-[var(--forge-red)]/30 bg-[var(--forge-red)]/10 text-[var(--forge-red)] text-sm font-mono">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="font-bold uppercase tracking-widest">Error</span>
+                      </div>
+                      <p>{runError}</p>
+                    </div>
+                  )}
+
+                  {runResults && runResults.results && runResults.results.map((tc, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`border rounded-lg overflow-hidden ${
+                        tc.passed
+                          ? 'border-[var(--forge-green)]/30 bg-[var(--forge-green)]/5'
+                          : 'border-[var(--forge-red)]/30 bg-[var(--forge-red)]/5'
+                      }`}
+                    >
+                      {/* Test case header */}
+                      <div className={`flex items-center justify-between px-4 py-2 ${tc.passed ? 'bg-[var(--forge-green)]/10' : 'bg-[var(--forge-red)]/10'}`}>
+                        <div className="flex items-center gap-2">
+                          {tc.passed
+                            ? <CheckCircle className="w-4 h-4 text-[var(--forge-green)]" />
+                            : <XCircle className="w-4 h-4 text-[var(--forge-red)]" />
+                          }
+                          <span className={`text-sm font-bold font-mono uppercase tracking-widest ${tc.passed ? 'text-[var(--forge-green)]' : 'text-[var(--forge-red)]'}`}>
+                            Case {tc.testcase}: {tc.verdict}
+                          </span>
+                        </div>
+                        <span className="text-xs text-[var(--forge-dim)] font-mono">{tc.runtime}ms</span>
+                      </div>
+
+                      {/* Test case details */}
+                      <div className="px-4 py-3 space-y-2 font-mono text-xs">
+                        <div>
+                          <span className="text-[var(--forge-dim)] uppercase tracking-wider">Input: </span>
+                          <span className="text-[var(--forge-white)]">{tc.input}</span>
+                        </div>
+                        <div>
+                          <span className="text-[var(--forge-dim)] uppercase tracking-wider">Expected: </span>
+                          <span className="text-[var(--forge-green)]">{tc.expected}</span>
+                        </div>
+                        {tc.actual !== null && (
+                          <div>
+                            <span className="text-[var(--forge-dim)] uppercase tracking-wider">Output: </span>
+                            <span className={tc.passed ? 'text-[var(--forge-green)]' : 'text-[var(--forge-red)]'}>{tc.actual}</span>
+                          </div>
+                        )}
+                        {tc.error && (
+                          <div className="mt-2 p-2 bg-[#1A1010] border border-[var(--forge-red)]/30 text-[var(--forge-red)] overflow-x-auto">
+                            <pre className="whitespace-pre-wrap">{tc.error}</pre>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

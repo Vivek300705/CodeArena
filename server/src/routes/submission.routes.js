@@ -4,6 +4,7 @@ import {
   getSubmissions,
   getSubmissionById,
 } from "../controllers/submission.controller.js";
+import { runCode } from "../controllers/run.controller.js";
 import auth from "../middleware/auth.js";
 import submissionRateLimit from "../middleware/submissionRateLimit.js";
 import sanitizeCode from "../middleware/sanitizeCode.js";
@@ -60,6 +61,10 @@ const router = express.Router();
 
 // Order: auth → sliding-window rate limit → code sanitization → controller
 router.post("/", auth, submissionRateLimit, sanitizeCode, createSubmission);
+
+// Run code against example test cases (synchronous response, no DB record)
+router.post("/run", auth, submissionRateLimit, sanitizeCode, runCode);
+
 router.get("/", auth, getSubmissions);
 
 /**
