@@ -40,6 +40,10 @@ services:
       - key: REDIS_TLS
         value: "false"   # because your REDIS_URL is redis://...
 
+      # Gemini API key for Chatbot
+      - key: GEMINI_API_KEY
+        sync: false
+
   # ── Submission Worker ───────────────────────────────────────
   - type: worker
     name: codearena-worker
