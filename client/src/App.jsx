@@ -2,6 +2,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './routes';
 import { Toaster } from 'react-hot-toast';
 import { useSocket } from './hooks/useSocket.js';
+import Chatbot from './components/Chatbot';
 
 function App() {
   // Initialise the WebSocket connection for the logged-in user.
@@ -32,6 +33,7 @@ function App() {
         }}
       />
       <RouterProvider router={router} />
+      <Chatbot />
     </>
   );
 }

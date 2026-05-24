@@ -11,6 +11,7 @@ import { getProblemById, submitCode, getSubmissionById } from '../services/probl
 import { useSocket } from '../hooks/useSocket.js';
 import DifficultyBadge from '../components/DifficultyBadge.jsx';
 import ForgeButton from '../components/ForgeButton.jsx';
+import { useProblemContextStore } from '../store/useProblemContextStore.js';
 
 const LANGUAGES = [
   { id: 'javascript', name: 'JavaScript (Node.js)' },
@@ -41,6 +42,7 @@ const VERDICT_STYLE = {
 
 export default function ProblemDetail() {
   const { id } = useParams();
+  const { setProblem: setCtxProblem, setCode: setCtxCode, setLanguage: setCtxLanguage, clearContext } = useProblemContextStore();
 
   const [problem, setProblem] = useState(null);
   const [problemLoading, setProblemLoading] = useState(true);
@@ -73,6 +75,12 @@ export default function ProblemDetail() {
       .catch((err) => setProblemError(err.response?.data?.message || 'Failed to load transmission.'))
       .finally(() => setProblemLoading(false));
   }, [id]);
+
+  // ── Sync context to the global store so the Chatbot can see it ──
+  useEffect(() => { setCtxProblem(problem); }, [problem, setCtxProblem]);
+  useEffect(() => { setCtxCode(code); }, [code, setCtxCode]);
+  useEffect(() => { setCtxLanguage(language); }, [language, setCtxLanguage]);
+  useEffect(() => { return () => clearContext(); }, [clearContext]);
 
   const handleVerdictUpdate = useCallback((data) => {
     if (!submissionIdRef.current) return;

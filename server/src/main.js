@@ -19,6 +19,7 @@ import submissionRoutes from "./routes/submission.routes.js";
 import leaderboardRoutes from "./routes/leaderboard.routes.js";
 import benchmarkRoutes from "./routes/benchmark.routes.js";
 import duelRoutes from "./routes/duel.routes.js";
+import chatbotRoutes from "./routes/chatbot.routes.js";
 import { initSocket } from "./utils/socket.js";
 
 dotenv.config();
@@ -98,6 +99,7 @@ app.use("/api/v1/submissions", submissionRoutes);
 app.use("/api", leaderboardRoutes);
 app.use("/api", benchmarkRoutes);
 app.use("/api/v1/duel", duelRoutes);
+app.use("/api/chat", chatbotRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
