@@ -15,8 +15,8 @@ RUN npm ci --omit=dev
 # ──────────────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
-# Security: run as non-root user
-RUN addgroup -S codearena && adduser -S codearena -G codearena
+# Install docker CLI for code execution via docker socket
+RUN apk add --no-cache docker-cli
 
 WORKDIR /app
 
@@ -25,8 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY package.json ./
 
-# Switch to non-root
-USER codearena
+
 
 # App listens on this port (overridable via env)
 EXPOSE 8000
