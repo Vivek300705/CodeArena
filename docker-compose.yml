@@ -71,6 +71,8 @@ services:
       NODE_ENV: production
     networks:
       - backend
+    healthcheck:
+      disable: true
     depends_on:
       mongo:
         condition: service_healthy
