@@ -99,7 +99,7 @@ export default function Creator() {
             <div className="p-3 border border-[var(--forge-border)] rounded-full group-hover:border-[#0a66c2] group-hover:shadow-[0_0_15px_rgba(10,102,194,0.5)] transition-all"><Linkedin size={20} /></div>
             <span className="font-mono text-sm uppercase">LinkedIn</span>
           </a>
-          <a href="https://github.com/Vivek300705/porfolio.git" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[var(--forge-steel)] hover:text-[#9b59b6] transition-colors group">
+          <a href="https://porfolio-bp0y.onrender.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[var(--forge-steel)] hover:text-[#9b59b6] transition-colors group">
             <div className="p-3 border border-[var(--forge-border)] rounded-full group-hover:border-[#9b59b6] group-hover:shadow-[0_0_15px_rgba(155,89,182,0.5)] transition-all"><Globe size={20} /></div>
             <span className="font-mono text-sm uppercase">Portfolio</span>
           </a>
@@ -336,7 +336,7 @@ export default function Creator() {
                   <ExternalLink size={14} className="ml-auto text-[var(--forge-dim)]" />
                 </ForgeCard>
               </a>
-              <a href="https://github.com/Vivek300705/porfolio.git" target="_blank" rel="noopener noreferrer">
+              <a href="https://porfolio-bp0y.onrender.com" target="_blank" rel="noopener noreferrer">
                 <ForgeCard className="p-4 flex items-center gap-3 hover:border-[#9b59b6] hover:shadow-[0_0_15px_rgba(155,89,182,0.3)] transition-all cursor-pointer h-full">
                   <Globe className="text-[#9b59b6]" size={16} />
                   <div>
@@ -374,7 +374,7 @@ export default function Creator() {
                 <Github size={18} /> View My GitHub
               </ForgeButton>
             </a>
-            <a href="https://github.com/Vivek300705/porfolio.git" target="_blank" rel="noopener noreferrer">
+            <a href="https://porfolio-bp0y.onrender.com" target="_blank" rel="noopener noreferrer">
               <ForgeButton variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2 hover:border-[#9b59b6] hover:text-[#9b59b6]">
                 <Globe size={18} /> Portfolio
               </ForgeButton>

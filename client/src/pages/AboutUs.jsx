@@ -127,7 +127,7 @@ export default function AboutUs() {
                 Meet the Creator <span className="group-hover:translate-x-1 transition-transform">→</span>
               </ForgeButton>
             </Link>
-            <a href="https://github.com/Vivek300705/porfolio.git" target="_blank" rel="noopener noreferrer">
+            <a href="https://porfolio-bp0y.onrender.com" target="_blank" rel="noopener noreferrer">
               <ForgeButton variant="outline" className="flex items-center gap-2 group-hover:border-[#9b59b6] group-hover:text-[#9b59b6] transition-colors w-full sm:w-auto">
                 View Portfolio <ExternalLink size={16} />
               </ForgeButton>
