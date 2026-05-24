@@ -6,6 +6,7 @@ import CountUp from '../components/CountUp.jsx';
 import ForgeCard from '../components/ForgeCard.jsx';
 import ForgeButton from '../components/ForgeButton.jsx';
 import { useSEO } from '../hooks/useSEO.js';
+import { useAuthStore } from '../store/useAuthStore.js';
 
 // Typewriter hook
 function useTypewriter(words, typeSpeed = 80, deleteSpeed = 50, delay = 2000) {
@@ -59,6 +60,7 @@ export default function Landing() {
     description: "Challenge developers worldwide in real-time coding battles. Climb the ELO leaderboard, get AI feedback, and sharpen your skills. Free to join.",
     exact: true
   });
+  const { isAuthenticated } = useAuthStore();
   
   const typeText = useTypewriter([
     "FORGE YOUR SKILLS.",
@@ -129,17 +131,27 @@ export default function Landing() {
           </div>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-6 mt-4 items-center">
-            <Link to="/register">
-              <ForgeButton variant="primary" className="text-lg py-4 px-10 shadow-[0_0_20px_var(--forge-glow)] scale-100 hover:scale-[1.02] transform">
-                [ ENTER THE ARENA ]
-              </ForgeButton>
-            </Link>
-            <Link to="/problems">
-              <ForgeButton variant="secondary" className="text-lg py-4 px-10">
-                [ VIEW PROBLEMS ]
-              </ForgeButton>
-            </Link>
+          <div className="flex flex-col sm:flex-row gap-6 mt-4 items-center justify-center">
+            {!isAuthenticated ? (
+              <>
+                <Link to="/register">
+                  <ForgeButton variant="primary" className="text-lg py-4 px-10 shadow-[0_0_20px_var(--forge-glow)] scale-100 hover:scale-[1.02] transform">
+                    [ ENTER THE ARENA ]
+                  </ForgeButton>
+                </Link>
+                <Link to="/problems">
+                  <ForgeButton variant="secondary" className="text-lg py-4 px-10">
+                    [ VIEW PROBLEMS ]
+                  </ForgeButton>
+                </Link>
+              </>
+            ) : (
+              <Link to="/problems">
+                <ForgeButton variant="primary" className="text-lg py-4 px-10 shadow-[0_0_20px_var(--forge-glow)] scale-100 hover:scale-[1.02] transform">
+                  [ VIEW PROBLEMS ]
+                </ForgeButton>
+              </Link>
+            )}
           </div>
         </div>
 
