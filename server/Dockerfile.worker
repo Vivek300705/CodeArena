@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#  Stage 1: deps — install only production dependencies
+# ──────────────────────────────────────────────────────────────────────────────
+FROM node:20-bullseye-slim AS deps
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Stage 2: runner — lean production image with compilers
+# ──────────────────────────────────────────────────────────────────────────────
+FROM node:20-bullseye-slim AS runner
+
+# Install compilers and tools needed for direct execution
+RUN apt-get update && apt-get install -y \
+    g++ \
+    gcc \
+    python3 \
+    default-jdk \
+    golang \
+    rustc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Security: run as non-root user
+RUN addgroup --system codearena && adduser --system --ingroup codearena codearena
+
+WORKDIR /app
+
+# Copy only what we need
+COPY --from=deps /app/node_modules ./node_modules
+COPY src ./src
+COPY runner.sh ./runner.sh
+COPY package.json ./
+
+# Switch to non-root
+USER codearena
+
+# Ensure USE_DOCKER is false in this image
+ENV USE_DOCKER=false
+
+# Run the worker process
+CMD ["node", "src/workers/submission.worker.js"]

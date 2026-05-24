@@ -1,64 +1,14 @@
 console.log("--> WORKER: Module start");
 
-import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import { URL } from "url";
 import { Worker } from "bullmq";
 
-const runDockerWrapper = (cmd, timeoutMs) => {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, { shell: true, windowsHide: true });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    child.stdout.on("data", (data) => { stdout += data.toString(); });
-    child.stderr.on("data", (data) => { stderr += data.toString(); });
-    
-    let isDone = false;
-    const timer = setTimeout(() => {
-      if (!isDone) {
-        isDone = true;
-        child.kill("SIGKILL");
-        const err = new Error("Time Limit Exceeded");
-        err.code = 124;
-        err.stdout = stdout;
-        err.stderr = stderr;
-        reject(err);
-      }
-    }, timeoutMs);
-    
-    // Listen to 'exit' instead of 'close' to bypass Windows pipe deadlocks!
-    child.on("exit", (code) => {
-      if (isDone) return;
-      isDone = true;
-      clearTimeout(timer);
-      if (code !== 0 && code !== null) {
-        const err = new Error(`Command failed with code ${code}`);
-        err.code = code;
-        err.stdout = stdout;
-        err.stderr = stderr;
-        reject(err);
-      } else {
-        resolve({ stdout, stderr });
-      }
-    });
-
-    child.on("error", (err) => {
-      if (isDone) return;
-      isDone = true;
-      clearTimeout(timer);
-      err.stdout = stdout;
-      err.stderr = stderr;
-      reject(err);
-    });
-  });
-};
-
 import Submission from "../models/submission.model.js";
 import Problem from "../models/Problem.model.js";
 import logger from "../config/logger.js";
+import { executeCode } from "./executor.js";
 
 import dotenv from "dotenv";
 import connectDB from "../config/db_config.js";
@@ -90,14 +40,7 @@ function shouldUseTls(redisUrl) {
   return String(redisUrl || "").startsWith("rediss://");
 }
 
-/**
- * HELPER: Normalize Windows path for Docker
- */
-const normalizePathForDocker = (absolutePath) => {
-  return absolutePath
-    .replace(/^([A-Za-z]):\\/, (match, drive) => `/${drive.toLowerCase()}/`)
-    .replace(/\\/g, "/");
-};
+
 
 async function boot() {
   // ✅ Shared Redis (for cache, leaderboard)
@@ -263,11 +206,14 @@ async function boot() {
             fs.writeFileSync(path.join(tcDir, "input.txt"), tc.input);
 
             const start = Date.now();
-            const dockerCmd = `docker run --rm -v "${normalizePathForDocker(tcDir)}:/app/code" --read-only --tmpfs /tmp:exec --cap-drop ALL --security-opt no-new-privileges --cpus=0.5 -m ${problem.memoryLimit}m --network none codearena-runner bash /app/runner.sh ${submission.language} /app/code/${fileName} /app/code/input.txt`;
-
             try {
-              logger.info(`Executing Docker for testcase ${actualIndex}...`);
-              const { stdout, stderr } = await runDockerWrapper(dockerCmd, 15000);
+              const { stdout, stderr } = await executeCode({
+                language: submission.language,
+                tcDir,
+                fileName,
+                memoryLimit: problem.memoryLimit,
+                timeoutMs: 15000
+              });
               
               if (stderr.trim()) {
                 return { verdict: "Runtime Error", error: stderr.trim().substring(0, 1000), time: Date.now() - start };

@@ -1,71 +1,9 @@
-import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import Problem from "../models/Problem.model.js";
 import logger from "../config/logger.js";
-
-/**
- * Helper: Normalize Windows path for Docker volume mounts.
- * Converts D:\project\... → /d/project/...
- */
-const normalizePathForDocker = (absolutePath) => {
-  return absolutePath
-    .replace(/^([A-Za-z]):\\/, (match, drive) => `/${drive.toLowerCase()}/`)
-    .replace(/\\/g, "/");
-};
-
-/**
- * Helper: Run a Docker command with timeout.
- */
-const runDockerWrapper = (cmd, timeoutMs) => {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, { shell: true, windowsHide: true });
-
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data) => { stdout += data.toString(); });
-    child.stderr.on("data", (data) => { stderr += data.toString(); });
-
-    let isDone = false;
-    const timer = setTimeout(() => {
-      if (!isDone) {
-        isDone = true;
-        child.kill("SIGKILL");
-        const err = new Error("Time Limit Exceeded");
-        err.code = 124;
-        err.stdout = stdout;
-        err.stderr = stderr;
-        reject(err);
-      }
-    }, timeoutMs);
-
-    child.on("exit", (code) => {
-      if (isDone) return;
-      isDone = true;
-      clearTimeout(timer);
-      if (code !== 0 && code !== null) {
-        const err = new Error(`Command failed with code ${code}`);
-        err.code = code;
-        err.stdout = stdout;
-        err.stderr = stderr;
-        reject(err);
-      } else {
-        resolve({ stdout, stderr });
-      }
-    });
-
-    child.on("error", (err) => {
-      if (isDone) return;
-      isDone = true;
-      clearTimeout(timer);
-      err.stdout = stdout;
-      err.stderr = stderr;
-      reject(err);
-    });
-  });
-};
+import { executeCode } from "../workers/executor.js";
 
 /**
  * @desc    Run code against visible example test cases (synchronous response)
@@ -141,10 +79,14 @@ export const runCode = async (req, res, next) => {
       fs.writeFileSync(path.join(tcDir, "input.txt"), ex.input || "");
 
       const start = Date.now();
-      const dockerCmd = `docker run --rm -v "${normalizePathForDocker(tcDir)}:/app/code" --read-only --tmpfs /tmp:exec --cap-drop ALL --security-opt no-new-privileges --cpus=0.5 -m ${problem.memoryLimit || 256}m --network none codearena-runner bash /app/runner.sh ${language} /app/code/${fileName} /app/code/input.txt`;
-
       try {
-        const { stdout, stderr } = await runDockerWrapper(dockerCmd, 15000);
+        const { stdout, stderr } = await executeCode({
+          language,
+          tcDir,
+          fileName,
+          memoryLimit: problem.memoryLimit,
+          timeoutMs: 15000
+        });
         const elapsed = Date.now() - start;
 
         if (stderr.trim()) {
