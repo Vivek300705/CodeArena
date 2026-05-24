@@ -57,8 +57,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     # No ports exposed directly — traffic goes through Nginx
 
   # ── Submission Worker ──────────────────────────────────────────────────────
@@ -71,9 +69,6 @@ services:
     env_file: ./server/.env.docker
     environment:
       NODE_ENV: production
-    volumes:
-      # Worker needs Docker socket to spawn runner containers
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - backend
     depends_on:

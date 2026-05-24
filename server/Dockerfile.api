@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #  Stage 1: deps — install only production dependencies
 # ──────────────────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:20-bullseye-slim AS deps
 
 WORKDIR /app
 
@@ -13,25 +13,34 @@ RUN npm ci --omit=dev
 # ──────────────────────────────────────────────────────────────────────────────
 #  Stage 2: runner — lean production image
 # ──────────────────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:20-bullseye-slim AS runner
 
-# Install docker CLI for code execution via docker socket
-RUN apk add --no-cache docker-cli
+# Install compilers and tools needed for direct execution
+RUN apt-get update && apt-get install -y \
+    g++ \
+    gcc \
+    python3 \
+    default-jdk \
+    golang \
+    rustc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy only what we need
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
+COPY runner.sh ./runner.sh
 COPY package.json ./
-
-
 
 # App listens on this port (overridable via env)
 EXPOSE 8000
 
 # Health-check so Docker / Compose knows the container is ready
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- http://localhost:8000/health || exit 1
+  CMD curl -f http://localhost:8000/health || exit 1
 
+# Default command starts the API server
+# (The docker-compose worker service overrides this to run submission.worker.js)
 CMD ["node", "src/main.js"]
