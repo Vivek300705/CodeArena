@@ -6,13 +6,12 @@ services:
   # ── API Web Service ─────────────────────────────────────────
   - type: web
     name: codearena-api
-    runtime: node
+    runtime: docker
     plan: free
     region: ohio
     rootDir: server
 
-    buildCommand: npm ci --omit=dev
-    startCommand: node src/main.js
+    dockerfilePath: Dockerfile.api
 
     healthCheckPath: /health
     autoDeploy: true
@@ -20,6 +19,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: USE_DOCKER
+        value: "false"
 
       # ⚠️ IMPORTANT: optional, Render auto-injects PORT
       - key: PORT
