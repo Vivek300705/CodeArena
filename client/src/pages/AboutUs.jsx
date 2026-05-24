@@ -3,7 +3,7 @@ import { useSEO } from '../hooks/useSEO.js';
 import { Link } from 'react-router-dom';
 import ForgeButton from '../components/ForgeButton.jsx';
 import ForgeCard from '../components/ForgeCard.jsx';
-import { BookOpen, Target, Users, Trophy } from 'lucide-react';
+import { BookOpen, Target, Users, Trophy, ExternalLink } from 'lucide-react';
 
 export default function AboutUs() {
   useSEO({
@@ -121,11 +121,18 @@ export default function AboutUs() {
           <p className="text-lg text-[var(--forge-steel)] leading-relaxed font-mono md:w-4/5 mx-auto mb-8 relative z-10">
             CodeArena was built solo by Vivek Kumar Sulaniya, a Full Stack Developer and competitive programmer from NIT Allahabad. What started as a personal frustration with solo coding practice turned into a production platform used by developers worldwide.
           </p>
-          <Link to="/creator" className="relative z-10">
-            <ForgeButton variant="outline" className="flex items-center gap-2 group-hover:border-[var(--forge-ember)] group-hover:text-[var(--forge-ember)] transition-colors">
-              Meet the Creator <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </ForgeButton>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 relative z-10 justify-center">
+            <Link to="/creator">
+              <ForgeButton variant="outline" className="flex items-center gap-2 group-hover:border-[var(--forge-ember)] group-hover:text-[var(--forge-ember)] transition-colors w-full sm:w-auto">
+                Meet the Creator <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </ForgeButton>
+            </Link>
+            <a href="https://github.com/Vivek300705/porfolio.git" target="_blank" rel="noopener noreferrer">
+              <ForgeButton variant="outline" className="flex items-center gap-2 group-hover:border-[#9b59b6] group-hover:text-[#9b59b6] transition-colors w-full sm:w-auto">
+                View Portfolio <ExternalLink size={16} />
+              </ForgeButton>
+            </a>
+          </div>
         </div>
       </section>
 
