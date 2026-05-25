@@ -3,6 +3,7 @@ import { router } from './routes';
 import { Toaster } from 'react-hot-toast';
 import { useSocket } from './hooks/useSocket.js';
 import Chatbot from './components/Chatbot';
+import SessionModal from './components/SessionModal.jsx';
 import { useAuthStore } from './store/useAuthStore.js';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
           }
         }}
       />
+      <SessionModal />
       <RouterProvider router={router} />
       {isAuthenticated && <Chatbot />}
     </>

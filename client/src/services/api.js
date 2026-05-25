@@ -24,8 +24,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      useAuthStore.getState().logout();
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        useAuthStore.getState().setSessionExpired(true);
+        useAuthStore.getState().logout();
+      } else {
+        useAuthStore.getState().logout();
+      }
     }
     return Promise.reject(error);
   }
