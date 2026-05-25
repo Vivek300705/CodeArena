@@ -1,6 +1,7 @@
 import { admin, isFirebaseAdminInitialized } from "../config/firebase.js";
 import User from "../models/User.model.js";
-import { generateTokens } from "../utils/generateTokens.js";
+import jwt from "jsonwebtoken";
+import RefreshToken from "../models/RefreshToken.js";
 
 export const socialLogin = async (req, res) => {
   try {
@@ -64,7 +65,28 @@ export const socialLogin = async (req, res) => {
     }
 
     // Generate our JWT tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const accessToken = jwt.sign(
+      {
+        userId: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = jwt.sign(
+      {
+        userId: user._id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    await RefreshToken.create({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
 
     // Send response
     res.status(200).json({
