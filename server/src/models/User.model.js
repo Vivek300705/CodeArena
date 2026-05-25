@@ -21,8 +21,18 @@ const UserSchema = new mongoose.Schema(
 
     passwordHash: {
       type: String,
-      required: [true, "Password hash is required"],
+      required: function() { return !this.firebaseUid; },
       minlength: [8, "Password must be at least 8 characters"],
+    },
+    
+    firebaseUid: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    
+    avatarUrl: {
+      type: String,
     },
 
     role: {

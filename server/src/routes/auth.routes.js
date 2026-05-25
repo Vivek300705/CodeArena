@@ -3,6 +3,7 @@ import { registerUser } from "../controllers/registerUser.js";
 import { loginUser } from "../controllers/loginUser.js";
 import { refreshAccessToken } from "../controllers/refreshToken.js";
 import { logoutUser } from "../controllers/logoutUser.js";
+import { socialLogin } from "../controllers/socialLogin.js";
 import auth from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import {
@@ -19,6 +20,8 @@ const router = express.Router();
 router.post("/register", validate(registerSchema), registerUser);
 
 router.post("/login", validate(loginSchema), loginUser);
+
+router.post("/social-login", socialLogin);
 
 router.post("/forgotpassword", forgotPassword);
 

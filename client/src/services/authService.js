@@ -18,6 +18,10 @@ export const authService = {
     const response = await api.post('/auth/register', userData);
     return response.data;
   },
+  socialLogin: async (idToken) => {
+    const response = await api.post('/auth/social-login', { idToken });
+    return response.data;
+  },
   getProfile: async () => {
     const response = await api.get('/auth/profile');
     return response.data;
