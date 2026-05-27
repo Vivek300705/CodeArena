@@ -226,6 +226,6 @@ export const handleChat = async (req, res) => {
     res.json({ response: response.text });
   } catch (error) {
     logger.error({ err: error }, 'Error in chatbot controller');
-    res.status(500).json({ error: 'Failed to process chat message' });
+    res.status(500).json({ error: error.message || 'Failed to process chat message', details: error });
   }
 };
